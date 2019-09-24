@@ -1,4 +1,5 @@
 # gitignore
 __pycache__
+dist
 MANIFEST
 *.txt
