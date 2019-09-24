@@ -1,4 +1,4 @@
-# PokerLogic
+# pokerlib
 
 ## Intro
 This is meant to be a project, focusing on a library, 
