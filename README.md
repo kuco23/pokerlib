@@ -10,8 +10,7 @@ The library's main function is for its main class Round to be baseclassed and it
 ## Library applications
 
 ### PokerMessenger
-One application of the library included is made with pokermessenger app where IO depends on the fbchat module. You can check out the app's repository [here]
-(https://kuco23.github.io/pokermessenger/documentation.html).
+One application of the library included is made with pokermessenger app where IO depends on the fbchat module. You can check out the app's repository [here](https://github.com/kuco23/pokermessenger).
 
 
 ## Code Example
