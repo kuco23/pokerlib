@@ -1,0 +1,2 @@
+# pokerlib
+Python poker library
