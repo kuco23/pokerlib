@@ -10,16 +10,12 @@ class Table:
 
     def __init__(self, _id, players, small_blind, big_blind):
         self.id = _id
-        
         self.small_blind = small_blind
         self.big_blind = big_blind
-
         self.players = players
         self.button = 0
-
         self.round = None
         self.interrupt = False
-
         self.__player_removal_schedule = []
         self.__player_addition_schedule = []
 

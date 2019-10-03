@@ -216,40 +216,25 @@ class HandParser:
         pairnums = [0] * 5
         for num in self.__valnums: pairnums[num] += 1
 
-        # straight flush
         if None not in [self.__straightindexes, self.__flushsuit] \
-        and self._setStraightFlush(): pass
-
-        # four of a kind
+        and self._setStraightFlush():
+            pass
         elif pairnums[4]:
             self._setFourOfAKind()
-
-        # full house
         elif pairnums[3] == 2 or pairnums[3] == 1 and pairnums[2] >= 1:
             self._setFullHouse()
-
-        # flush
         elif self.__flushsuit is not None:
             self._setFlush()
-
-        # straight
         elif self.__straightindexes is not None:
             self._setStraight()
-
-        # three of a kind
         elif pairnums[3]:
             self._setThreeOfAKind()
-
-        # two pair
         elif pairnums[2] >= 2:
             self._setTwoPair()
-
-        # one pair
         elif pairnums[2] == 1:
             self._setOnePair()
-
-        # high card
-        else: self._setHighCard()
+        else:
+            self._setHighCard()
 
     def _setKickers(self):
         self.kickers.clear()

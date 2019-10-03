@@ -6,24 +6,24 @@ from .enums import *
 from ._handparser import HandParser, HandParserGroup
 from ._player import Player, PlayerGroup
 
-# Round philosophy:
-# The information about the state of game
-# should be kept within one object.
-# That object has a generator-like property,
-# so that, when sent valid input,
-# it updates properties so it's ready
-# for the next valid input.
+##################################################
+#                                                #
+#   Round philosophy:                            #
+#   The information about the state of game      #
+#   should be kept within one object.            #
+#   That object has a generator-like property,   #
+#   so that, when sent valid input,              #
+#   it updates properties so it's ready          #
+#   for the next valid input.                    #
+#                                                #
+##################################################
 
-# Round doesn't check for:
-# - unvalid checks (check when call is needed)
-# - button identifying an active player
+# Round's user input interface includes:
+# - validate checks (can't check when call is needed)
+# - validating raises (can't raise if funds are too low to call)
 
-# Round recognizes implicit all ins,
-# like when player's call exceeds his funds.
-# All the more specific rules, defining how to treat
-# player actions should be implemented in
-# Round.privateIn, as they are an attribute
-# of a slightly more specific round.
+# Round's implementation includes
+# - recognizing implicit all ins (player call exceeds his funds)
 
 # kwargs arguments for publicOut and privateOut are
 # basic immutable round objects.
@@ -35,7 +35,6 @@ class Round:
 
     def __init__(self, _id, players, button, small_blind, big_blind):
         self.id = _id
-
         self.finished = False
 
         self.small_blind = small_blind
@@ -46,16 +45,16 @@ class Round:
         self.current_index = button
 
         self.table = list()
-        self.deck = self._deckIterator()
-
         self.turn = None
-        self.turn_generator = self._turnGenerator()
+        
+        self._deck = self._deckIterator()
+        self._turn_generator = self._turnGenerator()
 
         self.publicOut(PublicOutId.NEWROUND)
 
         for player in self.players:
             player.resetState()
-            player.cards = (next(self.deck), next(self.deck))
+            player.cards = (next(self._deck), next(self._deck))
             player.hand = HandParser(list(player.cards))
 
             self.privateOut(
@@ -63,7 +62,7 @@ class Round:
                 player.id
             )
 
-        next(self.turn_generator)
+        next(self._turn_generator)
         self._dealBlinds()
         self._processState()
 
@@ -123,7 +122,7 @@ class Round:
     def _turnGenerator(self):
         for i, turn in zip((0,3,1,1), Turn):
             self.turn = turn
-            new_cards = [next(self.deck) for _ in range(i)]
+            new_cards = [next(self._deck) for _ in range(i)]
 
             for player in self.players:
                 player.played_turn = False
@@ -267,7 +266,7 @@ class Round:
             return self.close()
 
         elif active <= 1 and pots_balanced:
-            for _ in self.turn_generator: pass
+            for _ in self._turn_generator: pass
             self._dealWinnings()
             return self.close()
 
@@ -277,7 +276,7 @@ class Round:
                 return self.close()
             else:
                 self.current_index = self.button
-                next(self.turn_generator)
+                next(self._turn_generator)
 
         self._shiftCurrentPlayer()
         called = self.current_player.turn_stake[self.turn]
@@ -335,7 +334,7 @@ class Round:
         elif action == PlayerAction.ALLIN:
             self._allin()
 
-    def processAction(self, action, raise_by=0):
+    def _processAction(self, action, raise_by=0):
         self._executeAction(action, raise_by)
         self.current_player.played_turn = True
         self._processState()
@@ -346,9 +345,24 @@ class Round:
 
 
     def privateIn(self, user_id, **kwargs):
-        """Processes uvalidated user input"""
-        # override
-        return
+        """Processes ivalidated user input"""
+        # this is a standard action validation,
+        # which can be overriden
+        
+        player = self.current_player
+        to_call = self.turn_stake - player.turn_stake[self.turn]
+        
+        if action == PlayerAction.FOLD:
+            self._processAction(PlayerAction.FOLD)
+        elif action == PlayerAction.CHECK and to_call == 0:
+            self._processAction(PlayerAction.CHECK)
+        elif action == PlayerAction.CALL:
+            self._processAction(PlayerAction.CALL)
+        elif action == PlayerAction.RAISE:
+            if to_call < player.money:
+                self._processAction(PlayerAction.RAISE, raise_by)
+        elif action == PlayerAction.ALLIN:
+            self._processAction(PlayerAction.ALLIN)
 
     def privateOut(self, user_id, out_id, **kwargs):
         """Player out implementation"""

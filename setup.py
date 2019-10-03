@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'pokerlib',
   packages = ['pokerlib'],
-  version = '0.3',
+  version = '0.4',
   license='gpl-3.0',
   description = 'python poker library',
   author = 'Nejc Ševerkar',
