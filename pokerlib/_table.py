@@ -1,7 +1,7 @@
 from operator import add
 from math import inf
 
-from .enums import *
+from .enums import PlayerAction
 from ._player import Player, PlayerGroup
 from ._round import Round
 
@@ -16,8 +16,8 @@ class Table:
         self.button = 0
         self.round = None
         self.interrupt = False
-        self.__player_removal_schedule = []
-        self.__player_addition_schedule = []
+        self._player_removal_schedule = []
+        self._player_addition_schedule = []
 
     def __bool__(self):
         return 2 <= len(self.players.getNotBrokePlayers()) <= 9
@@ -29,17 +29,17 @@ class Table:
         return self.id == other.id
     
     def __iadd__(self, players):
-        self.__player_addition_schedule.extend(players)
+        self._player_addition_schedule.extend(players)
         if not self.round: self._updatePlayers()
         return self
 
     def __isub__(self, players):
-        self.__player_removal_schedule.extend(players)
+        self._player_removal_schedule.extend(players)
         if not self.round: self._updatePlayers()
         else:
             for player in players:
                 if player.id == self.round.current_player.id:
-                    self.round.processAction(PlayerAction.FOLD)
+                    self.round.privateIn(PlayerAction.FOLD)
                 elif player.id in self.round:
                     player.is_folded = True
         return self
@@ -48,15 +48,15 @@ class Table:
     def all_players(self):
         return add(
             self.players,
-            self.__player_addition_schedule
+            self._player_addition_schedule
         )
 
     # called only when round is finished
     def _updatePlayers(self):
-        self.players.extend(self.__player_addition_schedule)
-        self.players.remove(self.__player_removal_schedule)
-        self.__player_addition_schedule.clear()
-        self.__player_removal_schedule.clear()
+        self.players.extend(self._player_addition_schedule)
+        self.players.remove(self._player_removal_schedule)
+        self._player_addition_schedule.clear()
+        self._player_removal_schedule.clear()
 
     def newRound(self, round_id):
         assert not self.round

@@ -20,4 +20,4 @@ __all__ = [
     'PlayerGroup',
     'Round',
     'Table'
-] + enums.__all__
+]

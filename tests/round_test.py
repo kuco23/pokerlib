@@ -1,8 +1,7 @@
-from sys import path
-from pathlib import Path
+from os import chdir
 from argparse import ArgumentParser
 
-path.append(str(Path().cwd().parent))
+chdir('..')
 
 from pokerlib.enums import *
 from pokerlib import HandParser

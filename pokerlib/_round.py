@@ -13,8 +13,8 @@ from ._player import Player, PlayerGroup
 #   should be kept within one object.            #
 #   That object has a generator-like property,   #
 #   so that, when sent valid input,              #
-#   it updates properties so it's ready          #
-#   for the next valid input.                    #
+#   it updates properties which make it          #
+#   ready for the next valid input.              #
 #                                                #
 ##################################################
 
@@ -126,7 +126,7 @@ class Round:
 
             for player in self.players:
                 player.played_turn = False
-                player.hand.addCards(new_cards)
+                player.hand += new_cards
                 player.hand.parse()
 
             self.table.extend(new_cards)
@@ -343,12 +343,11 @@ class Round:
         self.finished = True
         self.publicOut(PublicOutId.ROUNDFINISHED)
 
-
-    def privateIn(self, user_id, **kwargs):
+    def privateIn(self, action, raise_by=0):
         """Processes ivalidated user input"""
         # this is a standard action validation,
         # which can be overriden
-        
+        print('private')
         player = self.current_player
         to_call = self.turn_stake - player.turn_stake[self.turn]
         
