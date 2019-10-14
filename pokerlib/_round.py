@@ -347,7 +347,6 @@ class Round:
         """Processes ivalidated user input"""
         # this is a standard action validation,
         # which can be overriden
-        print('private')
         player = self.current_player
         to_call = self.turn_stake - player.turn_stake[self.turn]
         
