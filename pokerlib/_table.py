@@ -1,5 +1,4 @@
 from operator import add
-from math import inf
 
 from .enums import PlayerAction
 from ._player import Player, PlayerGroup
@@ -29,11 +28,13 @@ class Table:
         return self.id == other.id
     
     def __iadd__(self, players):
+        self._clearPlayersFromSchedule(players)
         self._player_addition_schedule.extend(players)
         if not self.round: self._updatePlayers()
         return self
 
     def __isub__(self, players):
+        self._clearPlayersFromSchedule(players)
         self._player_removal_schedule.extend(players)
         if not self.round: self._updatePlayers()
         else:
@@ -51,6 +52,17 @@ class Table:
             self._player_addition_schedule
         )
 
+    def _clearPlayersFromSchedule(self, players):
+        clear_id = [player.id for player in players]
+        self._player_removal_schedule[:] = list(filter(
+            lambda player: player.id not in clear_id,
+            self._player_removal_schedule
+        ))
+        self._player_addition_schedule[:] = list(filter(
+            lambda player: player.id not in clear_id,
+            self._player_addition_schedule
+        ))
+        
     # called only when round is finished
     def _updatePlayers(self):
         self.players.extend(self._player_addition_schedule)
@@ -60,7 +72,6 @@ class Table:
 
     def newRound(self, round_id):
         assert not self.round
-        
         self._updatePlayers()
         assert self
 

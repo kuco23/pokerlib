@@ -6,17 +6,19 @@ from .enums import *
 from ._handparser import HandParser, HandParserGroup
 from ._player import Player, PlayerGroup
 
-##################################################
-#                                                #
-#   Round philosophy:                            #
-#   The information about the state of game      #
-#   should be kept within one object.            #
-#   That object has a generator-like property,   #
-#   so that, when sent valid input,              #
-#   it updates properties which make it          #
-#   ready for the next valid input.              #
-#                                                #
-##################################################
+"""
+╔════════════════════════════════════════════════╗
+║                                                ║
+║   Round philosophy:                            ║
+║   The information about the state of game      ║
+║   should be kept within one object.            ║
+║   That object has a generator-like property,   ║
+║   so that, when sent valid input,              ║
+║   it updates properties which make it          ║
+║   ready for the next valid input.              ║
+║                                                ║
+╚════════════════════════════════════════════════╝ 
+"""
 
 # Round's user input interface includes:
 # - validate checks (can't check when call is needed)
