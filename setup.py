@@ -2,13 +2,13 @@ from distutils.core import setup
 setup(
   name = 'pokerlib',
   packages = ['pokerlib'],
-  version = '0.4',
+  version = '0.5',
   license='gpl-3.0',
   description = 'python poker library',
   author = 'Nejc Ševerkar',
   author_email = 'nseverkar@gmail.com',
   url = 'https://github.com/kuco23/pokerlib',
-  download_url = 'https://github.com/kuco23/pokerlib/archive/v_03-alpha.tar.gz',
+  download_url = 'https://github.com/kuco23/pokerlib/archive/v_05-alpha.tar.gz',
   keywords = ['python', 'poker', 'library'],
   install_requires = [],
   classifiers=[
