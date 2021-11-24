@@ -4,7 +4,6 @@ class Player:
         self.table_id = table_id
         self.id = _id
         self.name = name
-             
         self.money = money
 
         self.cards = tuple()
@@ -14,7 +13,7 @@ class Player:
 
         self.stake = 0
         self.turn_stake = [0, 0, 0, 0]
-
+        
         self.played_turn = False
 
     @property
@@ -37,12 +36,13 @@ class Player:
         return self.hand == other.hand
 
     def resetState(self):
-        self.__init__(
-            self.table_id,
-            self.id,
-            self.name,
-            self.money
-        )
+        self.cards = tuple()
+        self.hand = None
+        self.is_folded = False
+        self.is_all_in = False
+        self.stake = 0
+        self.turn_stake = [0, 0, 0, 0]
+        self.played_turn = False
 
 
 class PlayerGroup(list):
@@ -57,7 +57,7 @@ class PlayerGroup(list):
 
     def remove(self, players):
         removal_ids = list(map(lambda x: x.id, players))
-        self[:] = list(filter(
+        self[:] = type(self)(filter(
             lambda player: player.id not in removal_ids,
             self
         ))
@@ -65,6 +65,11 @@ class PlayerGroup(list):
     def getPlayerById(self, _id):
         for player in self:
             if player.id == _id:
+                return player
+    
+    def getPlayerByAttr(self, attr, val):
+        for player in self:
+            if getattr(player, attr) == val:
                 return player
 
     def previousActivePlayer(self, i):
@@ -99,9 +104,15 @@ class PlayerGroup(list):
             self
         ))
 
-    def getNotBrokePlayers(self):
+    def getPlayersWithLessMoney(self, money):
         return type(self)(filter(
-            lambda player: player.money > 0,
+            lambda player: player.money <= money,
+            self
+        ))
+    
+    def getPlayersWithMoreMoney(self, money):
+        return type(self)(filter(
+            lambda player: player.money >= money,
             self
         ))
 

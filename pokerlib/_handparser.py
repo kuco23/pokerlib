@@ -1,11 +1,11 @@
 from bisect import insort
-from .enums import Hand, Value, Suit
+from .enums import Hand, Suit
 
 class HandParser:
     __slots__ = [
         "original", "ncards", "cards",
         "handenum", "handbase", "kickers",
-        "_valnums", "_suitnums",
+        "_ranknums", "_suitnums",
         "_flushsuit", "_straightindexes"
     ]
 
@@ -18,10 +18,10 @@ class HandParser:
         self.handbase = []
         self.kickers = []
 
-        self._valnums = [0] * 13
+        self._ranknums = [0] * 13
         self._suitnums = [0] * 4
-        for value, suit in cards:
-            self._valnums[value] += 1
+        for rank, suit in cards:
+            self._ranknums[rank] += 1
             self._suitnums[suit] += 1
 
         self._flushsuit = None
@@ -30,8 +30,9 @@ class HandParser:
                 self._flushsuit = suit
                 break
 
-        self._straightindexes = \
-            self._getStraightIndexes(self._valnums)
+        self._straightindexes = self._getStraightIndexes(
+            self._ranknums
+        )
 
     @property
     def handbasecards(self):
@@ -94,8 +95,8 @@ class HandParser:
         self.handbase.clear()
         self.kickers.clear()
 
-        for value, suit in cards:
-            self._valnums[value] += 1
+        for rank, suit in cards:
+            self._ranknums[rank] += 1
             self._suitnums[suit] += 1
 
         for suit in Suit:
@@ -104,7 +105,7 @@ class HandParser:
                 break
 
         self._straightindexes = \
-            self._getStraightIndexes(self._valnums)
+            self._getStraightIndexes(self._ranknums)
 
     @staticmethod
     def _getStraightIndexes(valnums):
@@ -144,7 +145,7 @@ class HandParser:
         self.handenum = Hand.FOUROFAKIND
 
         hindex = -1
-        for valnum in self._valnums:
+        for valnum in self._ranknums:
             hindex += valnum
             if valnum == 4: break
 
@@ -155,7 +156,7 @@ class HandParser:
 
         threes, twos = [], []
         hindex = -1
-        for val, valnum in enumerate(self._valnums):
+        for val, valnum in enumerate(self._ranknums):
             hindex += valnum
             if valnum == 3: threes.append((val, hindex))
             elif valnum == 2: twos.append((val, hindex))
@@ -184,7 +185,7 @@ class HandParser:
         self.handbase.clear()
 
         hindex = -1
-        for valnum in self._valnums:
+        for valnum in self._ranknums:
             hindex += valnum
             if valnum == 3: break
 
@@ -195,7 +196,7 @@ class HandParser:
         self.handbase.clear()
 
         hindex, paircounter = self.ncards, 0
-        for valnum in reversed(self._valnums):
+        for valnum in reversed(self._ranknums):
             hindex -= valnum
             if valnum == 2:
                 self.handbase.extend([hindex+1, hindex])
@@ -206,7 +207,7 @@ class HandParser:
         self.handenum = Hand.ONEPAIR
 
         hindex = -1
-        for valnum in self._valnums:
+        for valnum in self._ranknums:
             hindex += valnum
             if valnum == 2: break
 
@@ -218,7 +219,7 @@ class HandParser:
 
     def _setHand(self):
         pairnums = [0] * 5
-        for num in self._valnums: pairnums[num] += 1
+        for num in self._ranknums: pairnums[num] += 1
 
         if None not in [self._straightindexes, self._flushsuit] \
         and self._setStraightFlush():

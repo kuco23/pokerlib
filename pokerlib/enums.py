@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-class Value(IntEnum):
+class Rank(IntEnum):
     TWO = 0
     THREE = 1
     FOUR = 2
@@ -39,28 +39,39 @@ class Turn(IntEnum):
     TURN = 2
     RIVER = 3
 
-class PlayerAction(IntEnum):
+class RoundPublicInId(IntEnum):
     FOLD = 0
     CHECK = 1
     CALL = 2
     RAISE = 3
     ALLIN = 4
 
-class PrivateOutId(IntEnum):
+# codes sent from round to player
+class RoundPrivateOutId(IntEnum):
     DEALTCARDS = 0
 
-class PublicOutId(IntEnum):
-    NEWROUND = 0
-    ROUNDFINISHED = 1
+# codes sent from round to players
+class RoundPublicOutId(IntEnum):
+    NEWROUND = 1
     NEWTURN = 2
-    SMALLBLIND = 3
-    BIGBLIND = 4
-    PLAYERFOLD = 5
+    SMALLBLIND = 4
+    BIGBLIND = 5
     PLAYERCHECK = 6
     PLAYERCALL = 7
-    PLAYERRAISE = 8
-    PLAYERALLIN = 9
-    PLAYERAMOUNTTOCALL = 10
-    DECLAREPREMATUREWINNER = 11
-    DECLAREFINISHEDWINNER = 12
-    PUBLICCARDSHOW = 13
+    PLAYERFOLD = 8
+    PLAYERRAISE = 9
+    PLAYERALLIN = 10
+    PLAYERACTIONREQUIRED = 11
+    PUBLICCARDSHOW = 12
+    DECLAREPREMATUREWINNER = 13
+    DECLAREFINISHEDWINNER = 14
+    ROUNDFINISHED = 15
+
+class TablePublicInId(IntEnum):
+    STARTROUND = 0
+
+class TablePublicOutId(IntEnum):
+    PLAYERJOINED = 0
+    PLAYERLEFT = 1
+    NEWROUNDSTARTED = 2
+    ROUNDNOTINITIALIZED = 3
