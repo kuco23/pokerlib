@@ -69,6 +69,9 @@ class AbstractRound(ABC):
         next(self._turn_generator)
         self._dealBlinds()
         self._processState()
+    
+    def __repr__(self):
+        return f'Round({self.players}, {self.board})'
 
     def __bool__(self):
         return not self.finished

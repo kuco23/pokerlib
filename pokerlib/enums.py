@@ -72,6 +72,6 @@ class TablePublicInId(IntEnum):
 
 class TablePublicOutId(IntEnum):
     PLAYERJOINED = 0
-    PLAYERLEFT = 1
+    PLAYERREMOVED = 1
     NEWROUNDSTARTED = 2
     ROUNDNOTINITIALIZED = 3

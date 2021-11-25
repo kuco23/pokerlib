@@ -2,7 +2,6 @@ from abc import ABC
 from copy import copy as shallowcopy
 
 from ._round import AbstractRound, Round
-from ._player import PlayerGroup
 from .enums import *
 from .exceptions import *
 
@@ -15,17 +14,17 @@ class AbstractTable(ABC):
     RoundClass = AbstractRound
 
     def __init__(
-        self, _id, seats, buyin, 
-        small_blind, big_blind
+        self, _id, seats, players,
+        buyin, small_blind, big_blind
     ):
         self.id = _id
         self.seats = seats
+        self.players = players
         self.small_blind = small_blind
         self.big_blind = big_blind
         self.buyin = buyin
         self.button = 0
         self.round = None
-        self.players = PlayerGroup([])
     
     @property
     def nplayers(self):
@@ -59,10 +58,12 @@ class AbstractTable(ABC):
     def _shiftButton(self):
         self.button = (self.button + 1) % self.nplayers
     
+    # kick out any player that has no money and 
+    # cannot get any from the current round played
     def _kickoutLosers(self):
-        self.players = PlayerGroup(filter(
-            lambda p: p.money > 0, self.players
-        ))
+        for p in self.players:
+            if p.money == 0 and (p.stake == 0 or p.is_folded): 
+                self._removePlayer(p)
     
     def _addPlayer(self, player):
         self.players.append(player)
@@ -72,10 +73,9 @@ class AbstractTable(ABC):
         )
 
     def _removePlayer(self, player):
-        self.players.remove(player)
+        self.players.remove([player])
 
-        # if player is inside round, removal has to be done 
-        # by forcefolding
+        # if player is inside round, forcefold hand
         if player in self.round.players:
             if player.id == self.round.current_player.id:
                 self.round.publicIn(
@@ -84,12 +84,12 @@ class AbstractTable(ABC):
             else: player.is_folded = True
 
         self.publicOut(
-            TablePublicOutId.PLAYERLEFT, 
+            TablePublicOutId.PLAYERREMOVED, 
             player_id = player.id
         )    
     
     def _newRound(self, round_id):
-        self.round = self.Round(
+        self.round = self.RoundClass(
             round_id,
             shallowcopy(self.players),
             self.button,
@@ -120,10 +120,10 @@ class AbstractTable(ABC):
         # can be used to store additional table attributes
         ...
 
-# add checking to the table operations
-class SafeTable(AbstractTable):
-    
-    def _addPlayer(self, player):
+# add validators to the table operations
+class ValidatedTable(AbstractTable):
+
+    def _validatePlayer(self, player):
         if player.money < self.buyin:
             raise PlayerCannotJoinTable(
                 player.id, self.id, 'Buyin is too low'
@@ -136,34 +136,45 @@ class SafeTable(AbstractTable):
             raise PlayerCannotJoinTable(
                 player.id, self.id, 'Player already in table'
             )
+
+    def _validateRoundCreation(self):
+        if self.round: raise TableError('Round in progress')
+        if not self: raise TableError('Table insufficient')
+
+    def __init__(self, _id, seats, players, *args):
+        player_sprite = type(players)([])
+        super().__init__(_id, seats, player_sprite, *args)
+        for player in players: self._addPlayer(player)
+
+    def _addPlayer(self, player):
+        self._kickoutLosers()
+        self._validatePlayer(player)
         super()._addPlayer(player)
 
     def _startRound(self, round_id):
-        if self.round: raise TableError('Round in progress')
-        self._kickoutLosers()
-        if not self: raise TableError('Table insufficient')
+        self._validateRoundCreation()
         super()._startRound(round_id)
 
-class Table(SafeTable):
-    Round = Round
-
-    def _popRoundOutQueue(self):
-        private_out_queue = self.round.private_out_queue.copy()
-        public_out_queue = self.round.public_out_queue.copy()
+class Table(ValidatedTable):
+    RoundClass = Round
+    
+    def _forceOutRoundQueue(self):
+        for mes in self.round.private_out_queue: 
+            self.privateOut(mes.player_id, mes.id, **mes.data)
+        for mes in self.round.public_out_queue: 
+            self.publicOut(mes.id, **mes.data)
         self.round.private_out_queue.clear()
         self.round.public_out_queue.clear()
-        return private_out_queue, public_out_queue
     
     def publicIn(self, player_id, action, **kwargs):
 
         if action in RoundPublicInId:
             self.round.publicIn(player_id, action, **kwargs)
-            prv, pub = self._popRoundOutQueue()
-            for mes in prv: 
-                self.privateOut(mes.player_id, mes.id, **mes.data)
-            for mes in pub: 
-                self.publicOut(mes.id, **mes.data)
 
         elif action in TablePublicInId:
             if action is TablePublicInId.STARTROUND: 
                 self._startRound(1)
+        
+        # has to be done after every publicIn call
+        self._forceOutRoundQueue()
+        self._kickoutLosers()
