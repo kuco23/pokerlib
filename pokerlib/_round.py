@@ -62,8 +62,8 @@ class AbstractRound(ABC):
             player.hand = HandParser(list(player.cards))
 
             self.privateOut(
-                RoundPrivateOutId.DEALTCARDS,
-                player.id
+                player.id,
+                RoundPrivateOutId.DEALTCARDS
             )
 
         next(self._turn_generator)
@@ -379,7 +379,11 @@ class Round(AbstractRound):
         elif action is RoundPublicInId.RAISE:
            if to_call < player.money:
                 self._processAction(RoundPublicInId.RAISE, raise_by)
-        else: self._processAction(action, raise_by)
+        elif (
+            action is RoundPublicInId.CALL or 
+            action is RoundPublicInId.ALLIN or 
+            action is RoundPublicInId.FOLD 
+        ): self._processAction(action, raise_by)
 
     def privateOut(self, out_id, player_id, **kwargs):
         """Player out implementation"""

@@ -6,9 +6,9 @@ from .enums import *
 from .exceptions import *
 
 
-# Table assums added players have enough funds to join.
+# Table assumes added players have enough funds to join.
 # This should be taken care when Player is created from
-# User, when joining a table. 
+# User, before joining a table. 
 
 class AbstractTable(ABC):
     RoundClass = AbstractRound
@@ -169,7 +169,10 @@ class Table(ValidatedTable):
     def publicIn(self, player_id, action, **kwargs):
 
         if action in RoundPublicInId:
-            self.round.publicIn(player_id, action, **kwargs)
+            if not self.round: 
+                return self.publicOut(
+                    TablePublicOutId.ROUNDNOTINITIALIZED)
+            else: self.round.publicIn(player_id, action, **kwargs)
 
         elif action in TablePublicInId:
             if action is TablePublicInId.STARTROUND: 
