@@ -79,6 +79,9 @@ class AbstractRound(ABC):
     def __contains__(self, _id):
         return self.players.getPlayerById(_id) is not None
 
+    def __getitem__(self, _id):
+        return self.players.getPlayerById(_id)
+
     @property
     def current_player(self):
         return self.players[self.current_index]
@@ -351,17 +354,16 @@ class AbstractRound(ABC):
         
     def privateOut(self, player_id, out_id, **kwargs):
         """Override player out implementation"""
-        # can be used to store additional round attributes
         ...
 
     def publicOut(self, out_id, **kwargs):
         """Override game out implementation"""
-        # can be used to store additional round attributes
         ...
+
 
 class Round(AbstractRound):
     PublicOut = namedtuple('PublicOut', ['id', 'data'])
-    PrivateOut = namedtuple('PrivateOut', ['id', 'player_id', 'data'])
+    PrivateOut = namedtuple('PrivateOut', ['player_id', 'id', 'data'])
 
     def __init__(self, *args):
         self.public_out_queue = deque([])
@@ -385,14 +387,44 @@ class Round(AbstractRound):
             action is RoundPublicInId.FOLD 
         ): self._processAction(action, raise_by)
 
-    def privateOut(self, out_id, player_id, **kwargs):
+    def privateOut(self, player_id, out_id, **kwargs):
         """Player out implementation"""
         # A solution for interacting with an outside io
+        kwargs.update(self.extendedPrivateOut(player_id, out_id, kwargs))
         out = self.PrivateOut(player_id, out_id, kwargs)
         self.private_out_queue.append(out)
 
     def publicOut(self, out_id, **kwargs):
         """Game out implementation"""
         # A solution for interacting with an outside io
+        kwargs.update(self.extendedPublicOut(out_id, kwargs))
         out = self.PublicOut(out_id, kwargs)
         self.public_out_queue.append(out)
+    
+    def extendedPrivateOut(self, player_id, out_id, kwargs):
+        """Relevant private-out arguments from round instance state"""
+        player = self.players.getPlayerById(player_id)
+        if out_id is RoundPrivateOutId.DEALTCARDS:
+            return {'cards': player.cards}
+        else: return dict()
+        
+    def extendedPublicOut(self, out_id, kwargs):
+        """Relevant public-out arguments from round instance state"""
+        if out_id is RoundPublicOutId.NEWTURN:
+            return {'board': self.board}
+        elif out_id is RoundPublicOutId.SMALLBLIND: 
+            return {'small_blind': self.small_blind} 
+        elif out_id is RoundPublicOutId.BIGBLIND:
+            return {'big_blind': self.big_blind}
+        elif out_id is RoundPublicOutId.PUBLICCARDSHOW:
+            player = self.players.getPlayerById(kwargs['player_id'])
+            return {'cards': player.cards}
+        elif out_id is RoundPublicOutId.DECLAREFINISHEDWINNER:
+            player = self.players.getPlayerById(kwargs['player_id'])
+            return {
+                'cards': player.cards, 
+                'handname': player.hand.handenum,
+                'hand': player.hand.handbasecards
+            }
+        else: return dict()
+    

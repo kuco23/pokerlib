@@ -69,9 +69,11 @@ class RoundPublicOutId(IntEnum):
 
 class TablePublicInId(IntEnum):
     STARTROUND = 0
+    LEAVETABLE = 1
 
 class TablePublicOutId(IntEnum):
     PLAYERJOINED = 0
     PLAYERREMOVED = 1
     NEWROUNDSTARTED = 2
     ROUNDNOTINITIALIZED = 3
+    UNABLETOSTARTROUND = 4

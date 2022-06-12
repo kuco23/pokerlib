@@ -44,6 +44,12 @@ class AbstractTable(ABC):
             if player.id == p.id: return True
         return False
 
+    def __getitem__(self, player_id):
+        for p in self.players:
+            if player_id == p.id: return p
+        if self.round: 
+            return self.round[player_id]
+
     def __iter__(self):
         return iter(self.players)
     
@@ -81,11 +87,13 @@ class AbstractTable(ABC):
                 self.round.publicIn(
                     player.id, RoundPublicInId.FOLD
                 )
-            else: player.is_folded = True
+            else: 
+                player.is_folded = True
+                self.round._processState()
 
         self.publicOut(
             TablePublicOutId.PLAYERREMOVED, 
-            player_id = player.id
+            player_id = player.id,
         )    
     
     def _newRound(self, round_id):
@@ -159,10 +167,10 @@ class Table(ValidatedTable):
     RoundClass = Round
     
     def _forceOutRoundQueue(self):
-        for mes in self.round.private_out_queue: 
-            self.privateOut(mes.player_id, mes.id, **mes.data)
-        for mes in self.round.public_out_queue: 
-            self.publicOut(mes.id, **mes.data)
+        for msg in self.round.private_out_queue: 
+            self.privateOut(msg.player_id, msg.id, **msg.data)
+        for msg in self.round.public_out_queue: 
+            self.publicOut(msg.id, **msg.data)
         self.round.private_out_queue.clear()
         self.round.public_out_queue.clear()
     
@@ -176,8 +184,12 @@ class Table(ValidatedTable):
 
         elif action in TablePublicInId:
             if action is TablePublicInId.STARTROUND: 
+                if not self: return TablePublicOutId.UNABLETOSTARTROUND
                 self._startRound(1)
-        
+            elif action is TablePublicInId.LEAVETABLE:
+                player = self.players.getPlayerById(player_id)
+                self._removePlayer(player)
+                
         # has to be done after every publicIn call
         self._forceOutRoundQueue()
         self._kickoutLosers()
