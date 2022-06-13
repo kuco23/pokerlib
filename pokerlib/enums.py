@@ -32,7 +32,6 @@ class Hand(IntEnum):
     FOUROFAKIND = 7
     STRAIGHTFLUSH = 8
     
-
 class Turn(IntEnum):
     PREFLOP = 0
     FLOP = 1
@@ -70,10 +69,18 @@ class RoundPublicOutId(IntEnum):
 class TablePublicInId(IntEnum):
     STARTROUND = 0
     LEAVETABLE = 1
+    BUYIN = 2
 
 class TablePublicOutId(IntEnum):
     PLAYERJOINED = 0
     PLAYERREMOVED = 1
     NEWROUNDSTARTED = 2
-    ROUNDNOTINITIALIZED = 3
-    UNABLETOSTARTROUND = 4
+    ROUNDNOTINITIALIZED = 7
+    ROUNDINPROGRESS = 8
+    INCORRECTNUMBEROFPLAYERS = 9
+
+class TablePrivateOutId(IntEnum):
+    BUYINTOOLOW = 4
+    TABLEFULL = 5
+    PLAYERALREADYATTABLE = 6
+    

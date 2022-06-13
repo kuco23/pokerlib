@@ -81,8 +81,8 @@ class AbstractTable(ABC):
     def _removePlayer(self, player):
         self.players.remove([player])
 
-        # if player is inside round, forcefold hand
-        if player in self.round.players:
+        # if player is inside an active round: forcefold
+        if self.round and player in self.round.players:
             if player.id == self.round.current_player.id:
                 self.round.publicIn(
                     player.id, RoundPublicInId.FOLD
@@ -131,24 +131,6 @@ class AbstractTable(ABC):
 # add validators to the table operations
 class ValidatedTable(AbstractTable):
 
-    def _validatePlayer(self, player):
-        if player.money < self.buyin:
-            raise PlayerCannotJoinTable(
-                player.id, self.id, 'Buyin is too low'
-            )
-        elif self.nplayers >= self.seats:
-            raise PlayerCannotJoinTable(
-                player.id, self.id, 'Table is full'
-            )
-        elif player in self:
-            raise PlayerCannotJoinTable(
-                player.id, self.id, 'Player already in table'
-            )
-
-    def _validateRoundCreation(self):
-        if self.round: raise TableError('Round in progress')
-        if not self: raise TableError('Table insufficient')
-
     def __init__(self, _id, seats, players, *args):
         player_sprite = type(players)([])
         super().__init__(_id, seats, player_sprite, *args)
@@ -156,17 +138,31 @@ class ValidatedTable(AbstractTable):
 
     def _addPlayer(self, player):
         self._kickoutLosers()
-        self._validatePlayer(player)
-        super()._addPlayer(player)
+        if player.money < self.buyin: self.privateOut(
+            TablePrivateOutId.BUYINTOOLOW, 
+            player.id, table_id=self.id)
+        elif self.nplayers >= self.seats: self.privateOut(
+            TablePrivateOutId.TABLEFULL,
+            player.id, table_id=self.id)
+        elif player in self: self.privateOut(
+            TablePrivateOutId.PLAYERALREADYATTABLE,
+            player.id, table_id=self.id)
+        else: super()._addPlayer(player)
 
     def _startRound(self, round_id):
-        self._validateRoundCreation()
-        super()._startRound(round_id)
+        if self.round: self.publicOut(
+            TablePublicOutId.ROUNDINPROGRESS, 
+            round_id=round_id, table_id=self.id)
+        elif not self: self.publicOut(
+            TablePublicOutId.INCORRECTNUMBEROFPLAYERS,
+            round_id=round_id, table_id=self.id)
+        else: super()._startRound(round_id)
 
 class Table(ValidatedTable):
     RoundClass = Round
     
     def _forceOutRoundQueue(self):
+        if self.round is None: return
         for msg in self.round.private_out_queue: 
             self.privateOut(msg.player_id, msg.id, **msg.data)
         for msg in self.round.public_out_queue: 
@@ -174,22 +170,23 @@ class Table(ValidatedTable):
         self.round.private_out_queue.clear()
         self.round.public_out_queue.clear()
     
-    def publicIn(self, player_id, action, **kwargs):
+    def publicIn(self, player_id, action, kwargs):
 
         if action in RoundPublicInId:
-            if not self.round: 
-                return self.publicOut(
-                    TablePublicOutId.ROUNDNOTINITIALIZED)
-            else: self.round.publicIn(player_id, action, **kwargs)
+            if not self.round: self.publicOut(
+                TablePublicOutId.ROUNDNOTINITIALIZED)
+            else: self.round.publicIn(
+                player_id, action, kwargs.get('raise_by'))
 
         elif action in TablePublicInId:
             if action is TablePublicInId.STARTROUND: 
-                if not self: return TablePublicOutId.UNABLETOSTARTROUND
                 self._startRound(1)
             elif action is TablePublicInId.LEAVETABLE:
                 player = self.players.getPlayerById(player_id)
                 self._removePlayer(player)
-                
+            elif action is TablePublicInId.BUYIN:
+                self += [kwargs['player']]
+
         # has to be done after every publicIn call
         self._forceOutRoundQueue()
         self._kickoutLosers()
