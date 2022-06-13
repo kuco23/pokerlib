@@ -139,14 +139,14 @@ class ValidatedTable(AbstractTable):
     def _addPlayer(self, player):
         self._kickoutLosers()
         if player.money < self.buyin: self.privateOut(
-            TablePrivateOutId.BUYINTOOLOW, 
-            player.id, table_id=self.id)
+            player.id, TablePrivateOutId.BUYINTOOLOW, 
+            table_id=self.id)
         elif self.nplayers >= self.seats: self.privateOut(
-            TablePrivateOutId.TABLEFULL,
-            player.id, table_id=self.id)
+            player.id, TablePrivateOutId.TABLEFULL, 
+            table_id=self.id)
         elif player in self: self.privateOut(
-            TablePrivateOutId.PLAYERALREADYATTABLE,
-            player.id, table_id=self.id)
+            player.id, TablePrivateOutId.PLAYERALREADYATTABLE,
+            table_id=self.id)
         else: super()._addPlayer(player)
 
     def _startRound(self, round_id):
