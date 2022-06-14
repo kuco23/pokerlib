@@ -180,7 +180,7 @@ class Table(ValidatedTable):
 
         elif action in TablePublicInId:
             if action is TablePublicInId.STARTROUND: 
-                self._startRound(1)
+                self._startRound(kwargs.get('round_id'))
             elif action is TablePublicInId.LEAVETABLE:
                 player = self.players.getPlayerById(player_id)
                 self._removePlayer(player)
