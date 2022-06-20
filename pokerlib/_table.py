@@ -3,7 +3,6 @@ from copy import copy as shallowcopy
 
 from ._round import AbstractRound, Round
 from .enums import *
-from .exceptions import *
 
 
 # Table assumes added players have enough funds to join.

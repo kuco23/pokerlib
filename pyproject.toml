@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "pokerlib"
+version = "0.6.0"
+description = "Python poker library"
+authors = ["kuco23 <nseverkar@gmail.com>"]
+keywords = ['python', 'poker', 'library']
+classifiers=  [
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Developers',
+    'Topic :: Software Development :: Build Tools',
+    'License :: Free For Home Use',
+    'Programming Language :: Python :: 3'
+  ]
+readme = "README.md"
+include = ["LICENSE"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
