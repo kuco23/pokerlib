@@ -162,7 +162,7 @@ A simple command line game, where you respond by enum names, can be started by
 table.publicIn(player1.id, TablePublicInId.STARTROUND)
 while True:
     p = table.round.current_player
-    i = input('Player {p.name}: ')
+    i = input(f'Player {p.name}: ')
     cmd = RoundPublicInId.__members__[i]
     table.publicIn(p.id, cmd)
 ```
