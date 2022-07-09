@@ -156,6 +156,17 @@ keep players informed of the game continuation (like e.g. `PLAYERACTIONREQUIRED`
 For all possible outputs check `RoundPublicInId` and `TablePublicInId` enums.
 A new round has to be initiated by one of the players every time it ends.
 
+A simple command line game, where you respond by enum names, can be started by
+
+```python
+table.publicIn(player1.id, TablePublicInId.STARTROUND)
+while True:
+    p = table.round.current_player
+    i = input('Player {p.name}: ')
+    cmd = RoundPublicInId.__members__[i]
+    table.publicIn(p.id, cmd)
+```
+
 ## Tests
 
 Basic tests for this library are included.
