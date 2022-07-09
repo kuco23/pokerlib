@@ -85,8 +85,15 @@ hand = HandParser([
 ])
 
 hand.parse()
-print(hand.kickers) # [<Rank.EIGHT: 6>, <Rank.SEVEN: 5>, <Rank.SIX: 4>]
+print(hand.kickercards)
+# [
+#   (<Rank.ACE: 12>, <Suit.CLUB: 1>),
+#   (<Rank.KING: 11>, <Suit.CLUB: 1>),
+#   (<Rank.TEN: 8>, <Suit.HEART: 3>)
+# ]
 ```
+
+FWY `kickers` attribute saves the indices of `hand.cards` that form the `kickercards`.
 
 ### Poker Game
 

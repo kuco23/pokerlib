@@ -44,7 +44,7 @@ class HandParser:
     def kickercards(self):
         return map(
             lambda i: self.cards[i],
-            self.handbase + self.kickers
+            self.kickers
         )
     @property
     def handfullcards(self):
@@ -249,7 +249,7 @@ class HandParser:
         
         i, lim = self.ncards - 1, 5 - len(self.handbase)
         while len(self.kickers) < lim and i >= 0:
-            if not inhand[i]: self.kickers.append(Rank(i))
+            if not inhand[i]: self.kickers.append(i)
             i -= 1
 
     def parse(self):
