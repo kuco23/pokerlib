@@ -24,7 +24,7 @@ for any number of cards.
 from pokerlib import HandParser
 from pokerlib.enums import Rank, Suit, Hand
 
-hand = [
+hand = HandParser([
     (Rank.SEVEN, Suit.HEART),
     (Rank.EIGHT, Suit.SPADE),
     (Rank.KING, Suit.DIAMOND),
@@ -32,9 +32,8 @@ hand = [
     (Rank.QUEEN, Suit.DIAMOND),
     (Rank.JACK, Suit.DIAMOND),
     (Rank.TEN, Suit.DIAMOND)
-]
+])
 
-parser = HandParser(hand)
 parser.parse()
 print(parser.handenum) # <Hand.STRAIGHTFLUSH: 8>
 ```
