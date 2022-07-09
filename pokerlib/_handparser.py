@@ -1,5 +1,5 @@
 from bisect import insort
-from .enums import Hand, Suit
+from .enums import Hand, Suit, Rank
 
 class HandParser:
     __slots__ = [
@@ -249,7 +249,7 @@ class HandParser:
         
         i, lim = self.ncards - 1, 5 - len(self.handbase)
         while len(self.kickers) < lim and i >= 0:
-            if not inhand[i]: self.kickers.append(i)
+            if not inhand[i]: self.kickers.append(Rank(i))
             i -= 1
 
     def parse(self):

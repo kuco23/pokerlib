@@ -169,7 +169,7 @@ class Table(ValidatedTable):
         self.round.private_out_queue.clear()
         self.round.public_out_queue.clear()
     
-    def publicIn(self, player_id, action, kwargs):
+    def publicIn(self, player_id, action, **kwargs):
 
         if action in RoundPublicInId:
             if not self.round: self.publicOut(

@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "pokerlib"
-version = "0.6.0"
+version = "0.8.0"
 description = "Python poker library"
+repository = "https://github.com/kuco23/pokerlib/"
 authors = ["kuco23 <nseverkar@gmail.com>"]
 keywords = ['python', 'poker', 'library']
+readme = "README.md"
 classifiers=  [
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
@@ -11,7 +13,6 @@ classifiers=  [
     'License :: Free For Home Use',
     'Programming Language :: Python :: 3'
   ]
-readme = "README.md"
 include = ["LICENSE"]
 
 [tool.poetry.dependencies]
