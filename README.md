@@ -18,20 +18,20 @@ Library consists of a module for parsing cards, which can be used seperately, an
 ### HandParser
 
 This module allows for parsing of hands. A hand usually consists of 2 dealt cards plus 5 on the board, but you can use this
-for any number of cards:
+for any number of cards.
 
 ```python
 from pokerlib import HandParser
 from pokerlib.enums import Rank, Suit, Hand
 
 hand = [
-    [Rank.SEVEN, Suit.HEART],
-    [Rank.EIGHT, Suit.SPADE],
-    [Rank.KING, Suit.DIAMOND],
-    [Rank.ACE, Suit.DIAMOND],
-    [Rank.QUEEN, Suit.DIAMOND],
-    [Rank.JACK, Suit.DIAMOND],
-    [Rank.TEN, Suit.DIAMOND]
+    (Rank.SEVEN, Suit.HEART),
+    (Rank.EIGHT, Suit.SPADE),
+    (Rank.KING, Suit.DIAMOND),
+    (Rank.ACE, Suit.DIAMOND),
+    (Rank.QUEEN, Suit.DIAMOND),
+    (Rank.JACK, Suit.DIAMOND),
+    (Rank.TEN, Suit.DIAMOND)
 ]
 
 parser = HandParser(hand)
@@ -39,18 +39,18 @@ parser.parse()
 print(parser.handenum) # <Hand.STRAIGHTFLUSH: 8>
 ```
 
-All of the enums used are `IntEnum`s, so you can also specify cards as integers (look at `pokerlib.enums` file to see the exact enumeration of ranks and suits). You can also compare different hands as
+All of the enums used are of type `IntEnum`, so you can also specify cards as integers (look at `pokerlib.enums` file to see the exact enumeration of ranks and suits). You can also compare different hands as
 
 ```python
-cards1 = [
+hand1 = HandParser([
     (Rank.KING, Suit.SPADE),
     (Rank.ACE, Suit.SPADE)
-]
+])
 
-cards2 = [
+hand2 = HandParser([
     (Rank.NINE, Suit.SPADE),
     (Rank.TWO, Suit.CLUB)
-]
+])
 
 board = [
     (Rank.EIGHT, Suit.SPADE),
@@ -60,8 +60,8 @@ board = [
     (Rank.TWO, Suit.HEART)
 ]
 
-hand1 = HandParser(cards1 + board)
-hand2 = HandParser(cards2 + board)
+hand1 += board
+hand2 += board
 
 hand1.parse()
 hand2.parse()
@@ -74,7 +74,7 @@ print(hand1 > hand2) # True
 you can also get kickers for a hand,
 
 ```python
-cards = [
+hand = HandParser([
     (Rank.TWO, Suit.DIAMOND),
     (Rank.ACE, Suit.CLUB),
     (Rank.TWO, Suit.SPADE),
@@ -82,9 +82,8 @@ cards = [
     (Rank.TEN, Suit.HEART),
     (Rank.SIX, Suit.HEART),
     (Rank.KING, Suit.CLUB)
-]
+])
 
-hand = HandParser(cards)
 hand.parse()
 print(hand.kickers) # [<Rank.EIGHT: 6>, <Rank.SEVEN: 5>, <Rank.SIX: 4>]
 ```
@@ -159,7 +158,3 @@ For instance `round_test.py` can be started from os terminal, by typing `python 
 ## License
 
 GNU General Public License v3.0
-
-```
-
-```
