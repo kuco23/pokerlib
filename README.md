@@ -34,11 +34,11 @@ hand = HandParser([
     (Rank.TEN, Suit.DIAMOND)
 ])
 
-parser.parse()
-print(parser.handenum) # <Hand.STRAIGHTFLUSH: 8>
+hand.parse()
+print(hand.handenum) # <Hand.STRAIGHTFLUSH: 8>
 ```
 
-All of the enums used are of type `IntEnum`, so you can also specify cards as integers (look at `pokerlib.enums` file to see the exact enumeration of ranks and suits). You can also compare different hands as
+All of the enums used are of type `IntEnum`, so you can also specify cards as integer pairs (look at `pokerlib.enums` file to see the exact enumeration of ranks and suits). You can also compare different hands as
 
 ```python
 hand1 = HandParser([
@@ -84,7 +84,7 @@ hand = HandParser([
 ])
 
 hand.parse()
-print(hand.kickercards)
+print(list(hand.kickercards))
 # [
 #   (<Rank.ACE: 12>, <Suit.CLUB: 1>),
 #   (<Rank.KING: 11>, <Suit.CLUB: 1>),
@@ -92,7 +92,7 @@ print(hand.kickercards)
 # ]
 ```
 
-FWY `kickers` attribute saves the indices of `hand.cards` that form the `kickercards`.
+Note that `kickers` attribute saves the indices of `hand.cards` that form the `kickercards`.
 
 ### Poker Game
 
@@ -107,30 +107,31 @@ class MyTable(Table):
     def publicOut(self, action, **kwargs):
         print(action, kwargs)
 
-table_id = 0
-seats = 2
-players = PlayerGroup([])
-buyin = 100
-small_blind = 5
-big_blind = 10
-
 table = MyTable(
-    table_id, seats, players,
-    buyin, small_blind, big_blind
+    table_id = 0
+    seats = 2
+    players = PlayerGroup([])
+    buyin = 100
+    small_blind = 5
+    big_blind = 10
 )
 ```
 
 To add players, we can do
 
 ```python
-userid1 = 1
-userid2 = 2
-username1 = 'foo'
-username2 = 'bar'
-
-player1 = Player(table_id, userid1, username1, 100)
-player2 = Player(table_id, userid2, username2, 100)
-
+player1 = Player(
+    table_id = table.id,
+    _id = 1,
+    name = 'alice',
+    money = table.buyin
+)
+player2 = Player(
+    table_id = table.id,
+    _id = 2,
+    name = 'bob',
+    money = table.buyin
+)
 table += [player1, player2]
 ```
 
@@ -159,6 +160,7 @@ A new round has to be initiated by one of the players every time it ends.
 A simple command line game, where you respond by enum names, can be started by
 
 ```python
+# define a table with fixed players
 table.publicIn(player1.id, TablePublicInId.STARTROUND)
 while True:
     p = table.round.current_player
