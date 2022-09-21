@@ -1,10 +1,8 @@
 # pokerlib
-
 [![PyPI version](https://badge.fury.io/py/pokerlib.svg)](https://pypi.org/project/pokerlib)
 
 ## General
-
-A Python poker library which focuses on simplifying a poker game implementation,
+A lightweight Python poker library that focuses on simplifying a poker game implementation
 when its io is supplied. It includes modules that help with hand parsing and poker game continuation.
 
 One application of this library was made by the PokerMessenger app,
@@ -12,19 +10,19 @@ which supplies library with io in the form of messenger group threads.
 The app's repo is at https://github.com/kuco23/pokermessenger.
 
 ## Usage
-
-Library consists of a module for parsing cards, which can be used seperately, and modules for running a poker game.
+Library consists of a module for parsing cards, which can be used seperately, and modules 
+that aid in running a poker game.
 
 ### HandParser
-
-This module allows for parsing of hands. A hand usually consists of 2 dealt cards plus 5 on the board, but you can use this
-for any number of cards.
+This module helps with parsing hands. A hand usually consists of 2 dealt cards plus 5 on the board, 
+but this is not a limitation here. You can parse any number of cards, e.g.
 
 ```python
 from pokerlib import HandParser
 from pokerlib.enums import Rank, Suit, Hand
 
 hand = HandParser([
+    (Rank.EIGHT, Suit.DIAMOND),
     (Rank.SEVEN, Suit.HEART),
     (Rank.EIGHT, Suit.SPADE),
     (Rank.KING, Suit.DIAMOND),
@@ -38,7 +36,8 @@ hand.parse()
 print(hand.handenum) # <Hand.STRAIGHTFLUSH: 8>
 ```
 
-All of the enums used are of type `IntEnum`, so you can also specify cards as integer pairs (look at `pokerlib.enums` file to see the exact enumeration of ranks and suits). You can also compare different hands as
+All of the enums used are of `IntEnum` type, so you can also specify cards as integer pairs.
+The main part of the HandParser functionality is comparing different hands:
 
 ```python
 hand1 = HandParser([
@@ -70,7 +69,7 @@ print(hand2.handenum) # Hand.STRAIGHTFLUSH
 print(hand1 > hand2) # True
 ```
 
-you can also get kickers for a hand,
+It is also possible to fetch hand's kickers.
 
 ```python
 hand = HandParser([
@@ -92,20 +91,59 @@ print(list(hand.kickercards))
 # ]
 ```
 
-Note that `kickers` attribute saves the indices of `hand.cards` that form the `kickercards`.
+Note that `kickers` attribute saves the indices of `hand.cards` that form `kickercards`.
+
+An important functionality of poker libraries is that they can estimate the probability
+of a hand winning in a certain context (as implemented [here](https://github.com/cookpete/poker-odds)).
+This is done by repeatedly random-sampling hands and then averaging the wins.
+Mathematically, this process converges to the probability by the law of large numbers.
+
+```python
+from random import sample
+from itertools import product
+from pokerlib import HandParser
+from pokerlib.enums import Rank, Suit
+
+def getWinningProbabilities(players_cards, board=[], n=1000):
+    cards = list(product(Rank, Suit))
+    for player_cards in players_cards:
+        for card in player_cards:
+            cards.remove(card)
+
+    wins = [0] * len(players_cards)
+    for i in range(n):
+        board_ = sample(cards, 5-len(board))
+        hands = [
+            HandParser(player_cards + board + board_)
+            for player_cards in players_cards
+        ]
+        for hand in hands: hand.parse()
+        winner = max(hands)
+        for i, hand in enumerate(hands):
+            if hand == winner: wins[i] += 1
+
+    return [win / n for win in wins]
+    
+w1, w2 = getWinningProbabilities([
+    [(Rank.ACE, Suit.HEART), (Rank.KING, Suit.HEART)],
+    [(Rank.KING, Suit.SPADE), (Rank.KING, Suit.DIAMOND)]
+])
+```
 
 ### Poker Game
-
-We can establish a poker table by defining its configuration. Table also generates
-output and we need to provide a function that handles it
+A poker table can be established by providing its configuration.
+The main idea of a poker table is that it responds with output to given input.
+That output can be further customized by overriding two functions that produce it.
 
 ```python
 from pokerlib import Player, PlayerGroup, Table
 
-# just print output
+# just print the output
 class MyTable(Table):
-    def publicOut(self, action, **kwargs):
-        print(action, kwargs)
+    def publicOut(self, out_id, **kwargs):
+        print(out_id, kwargs)
+    def privateOut(self, player_id, out_id, **kwargs):
+        print(out_id, kwargs)
 
 table = MyTable(
     table_id = 0
@@ -117,7 +155,8 @@ table = MyTable(
 )
 ```
 
-To add players, we can do
+We could provide players above inside the list, but let's add them seperately,
+as this is often the case in practice.
 
 ```python
 player1 = Player(
@@ -135,7 +174,8 @@ player2 = Player(
 table += [player1, player2]
 ```
 
-where 100 is the buyin amount. From here on, communication to the `table` object is established through enums:
+In the raw version, communication with the `table` object is established through specified enums
+(this can be changed by overriding table's `publicIn` method).
 
 ```python
 from pokerlib.enums import RoundPublicInId, TablePublicInId
@@ -152,17 +192,20 @@ table.publicIn(player1.id, RoundPublicInId.ALLIN)
 table.publicIn(player2.id, RoundPublicInId.CALL)
 ```
 
-Wrong inputs are mostly ignored, and additional outputs are generated to
-keep players informed of the game continuation (like e.g. `PLAYERACTIONREQUIRED`).
-For all possible outputs check `RoundPublicInId` and `TablePublicInId` enums.
-A new round has to be initiated by one of the players every time it ends.
+Wrong inputs are mostly ignored, but can produce a response, 
+when they seem to require it. As noted before, when providing input,
+the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`)
+along with additional data that depends on the output id.
+For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
 
-A simple command line game, where you respond by enum names, can be started by
+A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). 
+A simple command line game, where you respond by enum names, can be implemented as
 
 ```python
-# define a table with fixed players
-table.publicIn(player1.id, TablePublicInId.STARTROUND)
-while True:
+# define a table with fixed players, as it was done before
+while table:
+    while table and not table.round:
+        table.publicIn(player1.id, TablePublicInId.STARTROUND)
     p = table.round.current_player
     i = input(f'Player {p.name}: ')
     cmd = RoundPublicInId.__members__[i]
@@ -170,10 +213,8 @@ while True:
 ```
 
 ## Tests
-
 Basic tests for this library are included.
 For instance `round_test.py` can be started from os terminal, by typing `python round_test.py <player_num> <game_type>`, after which a simulation is run with not-that-informative data getting printed in stdout.
 
 ## License
-
 GNU General Public License v3.0
