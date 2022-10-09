@@ -15,29 +15,10 @@ that aid in running a poker game.
 
 ### HandParser
 This module helps with parsing hands. A hand usually consists of 2 dealt cards plus 5 on the board, 
-but this is not a limitation here. You can parse any number of cards, e.g.
-
-```python
-from pokerlib import HandParser
-from pokerlib.enums import Rank, Suit, Hand
-
-hand = HandParser([
-    (Rank.EIGHT, Suit.DIAMOND),
-    (Rank.SEVEN, Suit.HEART),
-    (Rank.EIGHT, Suit.SPADE),
-    (Rank.KING, Suit.DIAMOND),
-    (Rank.ACE, Suit.DIAMOND),
-    (Rank.QUEEN, Suit.DIAMOND),
-    (Rank.JACK, Suit.DIAMOND),
-    (Rank.TEN, Suit.DIAMOND)
-])
-
-hand.parse()
-print(hand.handenum) # <Hand.STRAIGHTFLUSH: 8>
-```
-
-All of the enums used are of `IntEnum` type, so you can also specify cards as integer pairs.
-The main part of the HandParser functionality is comparing different hands:
+and `HandParser` is optimized to work with up to 7 cards (otherwise flushes and straight flushes 
+require some small additional work). A card is defined as a pair of two enums. 
+All of the enums used are of `IntEnum` type, so you can also freely interchange them for integer. 
+Below is an example of how to construct two different hands and then compare them.
 
 ```python
 hand1 = HandParser([
@@ -58,8 +39,10 @@ board = [
     (Rank.TWO, Suit.HEART)
 ]
 
-hand1 += board
-hand2 += board
+# This is the same as adding the cards 
+# in the HandParser constructor
+hand1 += board # add the board to hand1
+hand2 += board # add the board to hand2
 
 hand1.parse()
 hand2.parse()

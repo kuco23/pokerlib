@@ -154,27 +154,27 @@ class HandParser:
     def _setFullHouse(self):
         self.handenum = Hand.FULLHOUSE
 
-        threes, twos = [], []
-        hindex = -1
-        for val, valnum in enumerate(self._ranknums):
-            hindex += valnum
-            if valnum == 3: threes.append((val, hindex))
-            elif valnum == 2: twos.append((val, hindex))
+        threes, twos = -1, -1
+        hindex = self.ncards
+        for valnum in reversed(self._ranknums):
+            hindex -= valnum
+            if valnum == 3 and threes == -1: 
+                threes = hindex
+            elif valnum >= 2 and twos == -1:
+                twos = hindex
+                break
 
-        i1, i2 = [threes.pop()[1], max(threes + twos)[1]]
-        self.handbase = [i1, i1-1, i1-2, i2, i2-1]
+        self.handbase = [threes, threes+1, threes+2, twos, twos+1]
 
     def _setFlush(self):
         self.handenum = Hand.FLUSH
-        self.handbase.clear()
 
         counter = 0
         for i in reversed(range(self.ncards)):
             if self.cards[i][1] == self._flushsuit:
-                self.handbase.append(i)
+                self.handbase[counter] = i
                 counter += 1
-            if counter == 5:
-                break
+                if counter == 5: break
 
     def _setStraight(self):
         self.handenum = Hand.STRAIGHT
@@ -182,7 +182,6 @@ class HandParser:
 
     def _setThreeOfAKind(self):
         self.handenum = Hand.THREEOFAKIND
-        self.handbase.clear()
 
         hindex = -1
         for valnum in self._ranknums:
