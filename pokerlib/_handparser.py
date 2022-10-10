@@ -168,6 +168,7 @@ class HandParser:
 
     def _setFlush(self):
         self.handenum = Hand.FLUSH
+        self.handbase = [0] * 5
 
         counter = 0
         for i in reversed(range(self.ncards)):
@@ -237,7 +238,7 @@ class HandParser:
             self._setTwoPair()
         elif pairnums[2] == 1:
             self._setOnePair()
-        else:
+        elif pairnums[1] >= 1:
             self._setHighCard()
 
     def _setKickers(self):
@@ -246,7 +247,8 @@ class HandParser:
         inhand = [False] * self.ncards
         for i in self.handbase: inhand[i] = True
         
-        i, lim = self.ncards - 1, 5 - len(self.handbase)
+        baselim = min(self.ncards, 5)
+        i, lim = self.ncards - 1, baselim - len(self.handbase)
         while len(self.kickers) < lim and i >= 0:
             if not inhand[i]: self.kickers.append(i)
             i -= 1
@@ -259,42 +261,13 @@ class HandParser:
 class HandParserGroup(list):
 
     def __repr__(self):
-        return f"HandParserGroup{self}"
+        return f"HandParserGroup{super().__repr__()}"
 
     def getGroupKickers(self):
-        win = max(self)
-        los = [hand for hand in self if hand < win]
-        if not los: return []
-        
-        mlos = max(los)
-        if win.handenum != mlos.handenum: return []
-        
-        w_base, w_kick, ml_base, ml_kick = map(
-            lambda cards: next(zip(*cards)),
-            (win.handbasecards, win.kickercards,
-             mlos.handbasecards, mlos.kickercards)
-        )
-
-        fivebased = [
-            Hand.STRAIGHT,
-            Hand.FLUSH,
-            Hand.FULLHOUSE,
-            Hand.STRAIGHTFLUSH
-        ]
-                     
-        if win.handenum not in fivebased:
-            if w_base != ml_base: return []
-            else: kicker_search = zip(w_kick, ml_kick)
-
-        elif win.handenum == Hand.FLUSH:
-            if w_base[0] != ml_base[0]: return []
-            kicker_search = zip(w_base[1:], ml_base[1:])
-
-        else: return []
-
-        kickers = []
-        for w_val, l_val in kicker_search:
-            kickers.append(w_val)
-            if w_val > l_val: return kickers
-
-        return []
+        winner = max(self)
+        hands = [hand for hand in self if hand.handenum == winner.handenum]
+        for i in range(len(winner.kickers)):
+            for hand in hands:
+                hki, wki = hand.kickers[i], winner.kickers[i]
+                hri, wri = hand.cards[hki][0], winner.cards[wki][0]
+                if hri < wri: return wri

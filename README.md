@@ -15,9 +15,9 @@ that aid in running a poker game.
 
 ### HandParser
 This module helps with parsing hands. A hand usually consists of 2 dealt cards plus 5 on the board, 
-and `HandParser` is optimized to work with up to 7 cards (otherwise flushes and straight flushes 
+and `HandParser` is optimized to work with up to 7 cards (otherwise flushes and straights 
 require some small additional work). A card is defined as a pair of two enums. 
-All of the enums used are of `IntEnum` type, so you can also freely interchange them for integer. 
+All of the enums used are of `IntEnum` type, so you can also freely interchange them for integers. 
 Below is an example of how to construct two different hands and then compare them.
 
 ```python

@@ -9,10 +9,10 @@ from pokerlib import Player, PlayerGroup
 from pokerlib import Table, Round
 
 actiondict = {
-    'call': PlayerAction.CALL,
-    'fold': PlayerAction.FOLD,
-    'check': PlayerAction.CHECK,
-    'all in': PlayerAction.ALLIN
+    'call': RoundPublicInId.CALL,
+    'fold': RoundPublicInId.FOLD,
+    'check': RoundPublicInId.CHECK,
+    'all in': RoundPublicInId.ALLIN
 }
 
 class Round(Round):
@@ -45,7 +45,7 @@ def roundSimulation(nplayers, money, sb, bb):
             args = actiondict[inp],
         elif inp.startswith('raise '):
             raise_by = inp.split()[1]
-            args = PlayerAction.RAISE, raise_by
+            args = RoundPublicInId.RAISE, raise_by
         else:
             continue
 
