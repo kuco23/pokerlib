@@ -185,14 +185,26 @@ A new round has to be initiated by one of the players every time the previous on
 A simple command line game, where you respond by enum names, can be implemented as
 
 ```python
-# define a table with fixed players, as it was done before
+# define a table with fixed players as before
+table = ...
 while table:
     while table and not table.round:
-        table.publicIn(player1.id, TablePublicInId.STARTROUND)
-    p = table.round.current_player
-    i = input(f'Player {p.name}: ')
-    cmd = RoundPublicInId.__members__[i]
-    table.publicIn(p.id, cmd)
+        table.publicIn(
+            table.players[0].id, 
+            TablePublicInId.STARTROUND)
+        
+    player = table.round.current_player
+    inp = input(f"require input from {player.id}: ")
+
+    if inp in RoundPublicInId.__members__:
+        args = RoundPublicInId.__members__[i], 0
+    elif inp.startswith(RoundPublicInId.RAISE.name):
+        raise_by = inp.split()[1]
+        args = RoundPublicInId.RAISE, raise_by
+    else:
+        continue
+
+    table.round.privateIn(player.id, *args)
 ```
 
 ## Tests

@@ -247,8 +247,7 @@ class HandParser:
         inhand = [False] * self.ncards
         for i in self.handbase: inhand[i] = True
         
-        baselim = min(self.ncards, 5)
-        i, lim = self.ncards - 1, baselim - len(self.handbase)
+        i, lim = self.ncards - 1, 5 - len(self.handbase)
         while len(self.kickers) < lim and i >= 0:
             if not inhand[i]: self.kickers.append(i)
             i -= 1
@@ -263,7 +262,7 @@ class HandParserGroup(list):
     def __repr__(self):
         return f"HandParserGroup{super().__repr__()}"
 
-    def getGroupKickers(self):
+    def getGroupKicker(self):
         winner = max(self)
         hands = [hand for hand in self if hand.handenum == winner.handenum]
         for i in range(len(winner.kickers)):

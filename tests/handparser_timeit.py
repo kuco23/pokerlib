@@ -1,17 +1,16 @@
-from sys import path
-from pathlib import Path
 from timeit import timeit
-from random import sample
 from itertools import product
-
-path.append(str(Path().cwd().parent))
+from random import sample
 from pokerlib import HandParser
 from pokerlib.enums import Rank, Suit
 
-def randomParse():
-    cards = sample(list(product(Rank, Suit)), 7)
-    hand = HandParser(cards)
-    hand.parse()
+def randomHand():
+    return sample(list(product(Rank, Suit)), 7)
 
-t = timeit(randomParse, number=10**6)
-print(t)
+def randomParse():
+    HandParser(randomHand()).parse()
+
+n = 10**6
+thand = timeit(randomHand, number=n)
+tparse = timeit(randomParse , number=n)
+print(f'HandParser parse time: {tparse - thand}')

@@ -1,4 +1,3 @@
-from random import sample
 from pokerlib import HandParser, HandParserGroup
 from pokerlib.enums import Rank, Suit, Hand
 
@@ -74,5 +73,5 @@ c3 = [[12,0], [9,2]]
 h1,h2,h3 = map(lambda c: HandParser(base + c), [c1,c2,c3])
 handgroup = HandParserGroup([h1,h2,h3])
 for i in range(3): handgroup[i].parse()
-kickers = handgroup.getGroupKickers2()
+kickers = handgroup.getGroupKicker()
 assert kickers == 9
