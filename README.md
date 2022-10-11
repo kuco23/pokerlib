@@ -199,7 +199,7 @@ while table:
     if inp in RoundPublicInId.__members__:
         args = RoundPublicInId.__members__[i], 0
     elif inp.startswith(RoundPublicInId.RAISE.name):
-        raise_by = inp.split()[1]
+        raise_by = int(inp.split()[1])
         args = RoundPublicInId.RAISE, raise_by
     else:
         continue
