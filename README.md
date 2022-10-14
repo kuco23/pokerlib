@@ -76,8 +76,8 @@ print(list(hand.kickercards))
 
 Note that `kickers` attribute saves the indices of `hand.cards` that form `kickercards`.
 
-An important functionality of poker libraries is that they can estimate the probability
-of a hand winning in a certain context (as implemented [here](https://github.com/cookpete/poker-odds)).
+An example implementation is estimating the probability of a hand
+winning in a certain context (as implemented [here](https://github.com/cookpete/poker-odds)).
 This is done by repeatedly random-sampling hands and then averaging the wins.
 Mathematically, this process converges to the probability by the law of large numbers.
 
@@ -89,6 +89,8 @@ from pokerlib.enums import Rank, Suit
 
 def getWinningProbabilities(players_cards, board=[], n=1000):
     cards = list(product(Rank, Suit))
+    for card in playe_cards: 
+        cards.remove(card)
     for player_cards in players_cards:
         for card in player_cards:
             cards.remove(card)
