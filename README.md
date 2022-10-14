@@ -89,8 +89,7 @@ from pokerlib.enums import Rank, Suit
 
 def getWinningProbabilities(players_cards, board=[], n=1000):
     cards = list(product(Rank, Suit))
-    for card in playe_cards: 
-        cards.remove(card)
+    for card in board: cards.remove(card)
     for player_cards in players_cards:
         for card in player_cards:
             cards.remove(card)
