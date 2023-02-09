@@ -7,7 +7,7 @@ from ._round import Round
 from ._table import Table
 
 __title__ = 'pokerlib'
-__version__ = '0.8.0'
+__version__ = '0.9.3'
 __description = 'Python poker library'
 
 __author__ = 'Nejc Ševerkar'
