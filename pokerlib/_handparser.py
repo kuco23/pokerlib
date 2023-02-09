@@ -162,6 +162,7 @@ class HandParser:
                 threes = hindex
             elif valnum >= 2 and twos == -1:
                 twos = hindex
+            if threes >= 0 and twos >= 0: 
                 break
 
         self.handbase = [threes, threes+1, threes+2, twos, twos+1]

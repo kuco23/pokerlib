@@ -1,7 +1,6 @@
 # pokerlib
 [![PyPI version](https://badge.fury.io/py/pokerlib.svg)](https://pypi.org/project/pokerlib)
 
-## General
 A lightweight Python poker library that focuses on simplifying a poker game implementation
 when its io is supplied. It includes modules that help with hand parsing and poker game continuation.
 
@@ -9,16 +8,16 @@ One application of this library was made by the PokerMessenger app,
 which supplies library with io in the form of messenger group threads.
 The app's repo is at https://github.com/kuco23/pokermessenger.
 
+To install, run 
+```bash
+pip install pokerlib
+```
+
 ## Usage
-Library consists of a module for parsing cards, which can be used seperately, and modules 
-that aid in running a poker game.
+Library consists of a module for parsing cards, which can be used seperately, and modules that aid in running a poker game.
 
 ### HandParser
-This module helps with parsing hands. A hand usually consists of 2 dealt cards plus 5 on the board, 
-and `HandParser` is optimized to work with up to 7 cards (otherwise flushes and straights 
-require some small additional work). A card is defined as a pair of two enums. 
-All of the enums used are of `IntEnum` type, so you can also freely interchange them for integers. 
-Below is an example of how to construct two different hands and then compare them.
+This module helps with parsing hands. A hand usually consists of 2 dealt cards plus 5 on the board, and `HandParser` is optimized to work with up to 7 cards (otherwise flushes and straights require some small additional work). A card is defined as a pair of two enums. All of the enums used are of `IntEnum` type, so you can also freely interchange them for integers. Below is an example of how to construct two different hands and then compare them.
 
 ```python
 hand1 = HandParser([
@@ -76,10 +75,7 @@ print(list(hand.kickercards))
 
 Note that `kickers` attribute saves the indices of `hand.cards` that form `kickercards`.
 
-An example implementation is estimating the probability of a hand
-winning in a certain context (as implemented [here](https://github.com/cookpete/poker-odds)).
-This is done by repeatedly random-sampling hands and then averaging the wins.
-Mathematically, this process converges to the probability by the law of large numbers.
+Using HandParser, we can estimate the probability of a given hand winning the game with given known cards on the table (as implemented in another python cli-app [here](https://github.com/cookpete/poker-odds)). We do this by repeatedly random-sampling hands, then averaging the wins. Mathematically, this process converges to the probability by the law of large numbers.
 
 ```python
 from random import sample
@@ -116,8 +112,8 @@ w1, w2 = getWinningProbabilities([
 
 ### Poker Game
 A poker table can be established by providing its configuration.
-The main idea of a poker table is that it responds with output to given input.
-That output can be further customized by overriding two functions that produce it.
+A poker table object responds to given input with appropriate output,
+which can be customized by overriding the two functions producing it.
 
 ```python
 from pokerlib import Player, PlayerGroup, Table
@@ -139,8 +135,9 @@ table = MyTable(
 )
 ```
 
-We could provide players above inside the list, but let's add them seperately,
-as this is often the case in practice.
+Players could be passed inside MyTable constructor, 
+but as they usually join the table after its definition, 
+we will do that below.
 
 ```python
 player1 = Player(
@@ -158,8 +155,9 @@ player2 = Player(
 table += [player1, player2]
 ```
 
-In the raw version, communication with the `table` object is established through specified enums
-(this can be changed by overriding table's `publicIn` method).
+Communication with the `table` object is established through specified enums,
+which can be modified by overriding table's `publicIn` method. 
+Using enums, we can implement a poker game as shown below.
 
 ```python
 from pokerlib.enums import RoundPublicInId, TablePublicInId
@@ -176,14 +174,13 @@ table.publicIn(player1.id, RoundPublicInId.ALLIN)
 table.publicIn(player2.id, RoundPublicInId.CALL)
 ```
 
-Wrong inputs are mostly ignored, but can produce a response, 
-when they seem to require it. As noted before, when providing input,
+Wrong inputs are mostly ignored, though they can produce a response, 
+when that seems useful. As noted before, when providing input,
 the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`)
 along with additional data that depends on the output id.
 For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
 
-A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). 
-A simple command line game, where you respond by enum names, can be implemented as
+A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). A simple command line game, where you respond by enum names, can be implemented as below (for working version check `tests/round_test.py`).
 
 ```python
 # define a table with fixed players as before
@@ -192,25 +189,33 @@ while table:
     while table and not table.round:
         table.publicIn(
             table.players[0].id, 
-            TablePublicInId.STARTROUND)
-        
+            TablePublicInId.STARTROUND
+        )
+
     player = table.round.current_player
     inp = input(f"require input from {player.id}: ")
 
     if inp in RoundPublicInId.__members__:
-        args = RoundPublicInId.__members__[i], 0
+        action, raise_by = RoundPublicInId.__members__[inp], 0
     elif inp.startswith(RoundPublicInId.RAISE.name):
         raise_by = int(inp.split()[1])
-        args = RoundPublicInId.RAISE, raise_by
+        action, raise_by = RoundPublicInId.RAISE, raise_by
     else:
         continue
 
-    table.round.privateIn(player.id, *args)
+    table.publicIn(player.id, action, raise_by=raise_by)
 ```
 
 ## Tests
-Basic tests for this library are included.
-For instance `round_test.py` can be started from os terminal, by typing `python round_test.py <player_num> <game_type>`, after which a simulation is run with not-that-informative data getting printed in stdout.
+Basic tests for this library are included. You can test handparser by running
+```bash
+python tests/handparser.py
+```
+and the poker game by calling
+```bash
+python tests/round_test.py <player_number>
+```
+which will run a poker game simulation with raw data getting printed to stdout.
 
 ## License
 GNU General Public License v3.0

@@ -130,9 +130,15 @@ class AbstractTable(ABC):
 # add validators to the table operations
 class ValidatedTable(AbstractTable):
 
-    def __init__(self, _id, seats, players, *args, **kwargs):
+    def __init__(
+        self, _id, seats, players, 
+        buyin, small_blind, big_blind
+    ):
         player_sprite = type(players)([])
-        super().__init__(_id, seats, player_sprite, *args, **kwargs)
+        super().__init__(
+            _id, seats, player_sprite, 
+            buyin, small_blind, big_blind
+        )
         for player in players: self._addPlayer(player)
 
     def _addPlayer(self, player):

@@ -1,55 +1,48 @@
-from os import chdir
+import sys
+sys.path.append('../pokerlib')
+
 from argparse import ArgumentParser
-
-chdir('..')
-
 from pokerlib.enums import *
 from pokerlib import HandParser
 from pokerlib import Player, PlayerGroup
 from pokerlib import Table, Round
 
-actiondict = {
-    'call': RoundPublicInId.CALL,
-    'fold': RoundPublicInId.FOLD,
-    'check': RoundPublicInId.CHECK,
-    'all in': RoundPublicInId.ALLIN
-}
-
-class Round(Round):
+class MyTable(Table):
 
     def publicOut(self, _id, **kwargs):
+        super().publicOut(_id, **kwargs)
         print(_id, kwargs)
     def privateOut(self, _id, player, **kwargs):
+        super().privateOut(_id, player, **kwargs)
         print(_id, player, kwargs)
-    def privateIn(self, player_id, action, raise_by=0):
-        self.processAction(action, raise_by)
 
-Table.Round = Round
-
-def roundSimulation(nplayers, money, sb, bb):
+def roundSimulation(nplayers, buyin, sb, bb):
     players = PlayerGroup(map(
-        lambda i: Player(None, i, f"user{i}", money),
+        lambda i: Player(None, i, f"player{i}", buyin),
         range(nplayers)
     ))
     
-    table = Table(None, players, sb, bb)
+    table = MyTable(None, nplayers, players, buyin, sb, bb)
 
     while table:
         while table and not table.round:
-            table.newRound(None)
+            table.publicIn(
+                table.players[0].id, 
+                TablePublicInId.STARTROUND
+            )
             
         player = table.round.current_player
-        inp = input(f"{player.id}: ")
+        inp = input(f"require input from {player.id}: ")
 
-        if inp in actiondict.keys():
-            args = actiondict[inp],
-        elif inp.startswith('raise '):
-            raise_by = inp.split()[1]
-            args = RoundPublicInId.RAISE, raise_by
+        if inp in RoundPublicInId.__members__:
+            action, raise_by = RoundPublicInId.__members__[inp], 0
+        elif inp.startswith(RoundPublicInId.RAISE.name):
+            raise_by = int(inp.split()[1])
+            action, raise_by = RoundPublicInId.RAISE, raise_by
         else:
             continue
 
-        table.round.privateIn(player.id, *args)
+        table.publicIn(player.id, action, raise_by=raise_by)
 
 
 args = ArgumentParser(

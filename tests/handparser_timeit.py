@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../pokerlib')
+
 from timeit import timeit
 from itertools import product
 from random import sample

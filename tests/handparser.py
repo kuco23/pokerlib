@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../pokerlib')
+
 from pokerlib import HandParser, HandParserGroup
 from pokerlib.enums import Rank, Suit, Hand
 
