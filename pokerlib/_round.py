@@ -228,7 +228,7 @@ class AbstractRound(ABC):
 
             hands = [p.hand for p in subgame_competitors]
             hands = HandParserGroup(hands)
-            kickers = hands.getGroupKickers()
+            kickers = hands.getGroupKicker()
 
             winning_players = subgame_competitors.winners()
             nsplit = len(winning_players)
