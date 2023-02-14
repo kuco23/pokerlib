@@ -76,8 +76,8 @@ class AbstractRound(ABC):
     def __bool__(self):
         return not self.finished
 
-    def __contains__(self, _id):
-        return self.players.getPlayerById(_id) is not None
+    def __contains__(self, player):
+        return player in self.players
 
     def __getitem__(self, _id):
         return self.players.getPlayerById(_id)

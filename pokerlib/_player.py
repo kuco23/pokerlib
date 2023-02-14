@@ -47,6 +47,12 @@ class Player:
 
 class PlayerGroup(list):
 
+    def __contains__(self, player):
+        for p in self:
+            if p.id == player.id:
+                return True
+        return False
+
     def __getitem__(self, i):
         ret = super().__getitem__(i)
         isl = isinstance(ret, list)

@@ -60,7 +60,6 @@ class HandParser:
         return f"HandParser({self.cards})"
 
     def __eq__(self, other):
-        if other is None: return False
         if self.handenum != other.handenum: return False
         for (s_val, _), (o_val, _) in zip(self.handfullcards,
                                           other.handfullcards):
