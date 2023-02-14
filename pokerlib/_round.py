@@ -76,8 +76,8 @@ class AbstractRound(ABC):
     def __bool__(self):
         return not self.finished
 
-    def __contains__(self, _id):
-        return self.players.getPlayerById(_id) is not None
+    def __contains__(self, player):
+        return player in self.players
 
     def __getitem__(self, _id):
         return self.players.getPlayerById(_id)
@@ -228,7 +228,7 @@ class AbstractRound(ABC):
 
             hands = [p.hand for p in subgame_competitors]
             hands = HandParserGroup(hands)
-            kickers = hands.getGroupKickers()
+            kickers = hands.getGroupKicker()
 
             winning_players = subgame_competitors.winners()
             nsplit = len(winning_players)

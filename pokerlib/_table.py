@@ -39,9 +39,7 @@ class AbstractTable(ABC):
         return self.id == other.id
 
     def __contains__(self, player):
-        for p in self.players: 
-            if player.id == p.id: return True
-        return False
+        return player in self.players
 
     def __getitem__(self, player_id):
         for p in self.players:
@@ -81,7 +79,7 @@ class AbstractTable(ABC):
         self.players.remove([player])
 
         # if player is inside an active round: forcefold
-        if self.round and player in self.round.players:
+        if self.round and player in self.round:
             if player.id == self.round.current_player.id:
                 self.round.publicIn(
                     player.id, RoundPublicInId.FOLD
