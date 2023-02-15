@@ -154,16 +154,16 @@ class HandParser:
     def _setFullHouse(self):
         self.handenum = Hand.FULLHOUSE
 
-        threes, twos = -1, -1
+        threes, twos = None, None
         hindex = self.ncards
         for valnum in reversed(self._ranknums):
             hindex -= valnum
-            if valnum == 3 and threes == -1: 
+            if valnum == 3 and threes is None:
                 threes = hindex
-            elif valnum >= 2 and twos == -1:
+                if twos is not None: break
+            elif valnum >= 2 and twos is None:
                 twos = hindex
-            if threes >= 0 and twos >= 0: 
-                break
+                if threes is not None: break
 
         self.handbase = [threes, threes+1, threes+2, twos, twos+1]
 
