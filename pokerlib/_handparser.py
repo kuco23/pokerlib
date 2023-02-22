@@ -1,23 +1,34 @@
 from bisect import insort
 from .enums import Hand, Suit, Rank
 
+def reactiveParse(fun):
+    def modfun(self, *args, **kwargs):
+        if not self._parsed:
+            self.parse()
+            self._parsed = True
+        return fun(self, *args, **kwargs)
+    return modfun
+
 class HandParser:
     __slots__ = [
         "original", "ncards", "cards",
-        "handenum", "handbase", "kickers",
+        "_handenum", "_handbase", "_kickers",
+        "_parsed",
         "_ranknums", "_suitnums",
-        "_flushsuit", "_straightindexes"
+        "_flushsuit", "_straightindices"
     ]
 
     def __init__(self, cards: list):
+        self._parsed = False
+
         self.original = cards
         self.ncards = len(cards)
         self.cards = sorted(cards, key = lambda x: x[0])
 
-        self.handenum = None
-        self.handbase = []
-        self.kickers = []
-
+        self._handenum = None
+        self._handbase = []
+        self._kickers = []
+        
         self._ranknums = [0] * 13
         self._suitnums = [0] * 4
         for rank, suit in cards:
@@ -30,9 +41,24 @@ class HandParser:
                 self._flushsuit = suit
                 break
 
-        self._straightindexes = self._getStraightIndexes(
+        self._straightindices = self._getStraightIndices(
             self._ranknums
         )
+    
+    @property
+    @reactiveParse
+    def handenum(self):
+        return self._handenum
+    
+    @property
+    @reactiveParse
+    def handbase(self):
+        return self._handbase
+
+    @property
+    @reactiveParse
+    def kickers(self):
+        return self._kickers
 
     @property
     def handbasecards(self):
@@ -83,17 +109,19 @@ class HandParser:
         return False
 
     def __iadd__(self, cards):
-        self._addCards(cards)
+        if len(cards) > 0:
+            self._addCards(cards)
         return self
 
     def _addCards(self, cards):
+        self._parsed = False
         self.original.extend(cards)
         self.ncards += len(cards)
         for card in cards: insort(self.cards, card)
 
-        self.handenum = None
-        self.handbase.clear()
-        self.kickers.clear()
+        self._handenum = None
+        self._handbase.clear()
+        self._kickers.clear()
 
         for rank, suit in cards:
             self._ranknums[rank] += 1
@@ -104,24 +132,24 @@ class HandParser:
                 self._flushsuit = suit
                 break
 
-        self._straightindexes = \
-            self._getStraightIndexes(self._ranknums)
+        self._straightindices = \
+            self._getStraightIndices(self._ranknums)
 
     @staticmethod
-    def _getStraightIndexes(valnums):
-        straightindexes = [None] * 5
+    def _getStraightIndices(valnums):
+        straightindices = [None] * 5
         straightlen, indexptr = 1, sum(valnums)
         for i in reversed(range(len(valnums))):
             indexptr -= valnums[i]
             if valnums[i-1] and valnums[i]:
-                straightindexes[straightlen-1] = indexptr
+                straightindices[straightlen-1] = indexptr
                 straightlen += 1
                 if straightlen == 5:
                     if indexptr == 0:
                         indexptr = sum(valnums)-1
                     else: indexptr -= valnums[i-1]
-                    straightindexes[4] = indexptr
-                    return straightindexes
+                    straightindices[4] = indexptr
+                    return straightindices
             else: straightlen = 1
 
     def _setStraightFlush(self):
@@ -133,26 +161,26 @@ class HandParser:
                  permut[counter] = i
                  counter += 1
 
-        suited_handbase = self._getStraightIndexes(suited_vals)
+        suited_handbase = self._getStraightIndices(suited_vals)
         if suited_handbase is not None:
-            self.handenum = Hand.STRAIGHTFLUSH
-            self.handbase = [permut[i] for i in suited_handbase]
+            self._handenum = Hand.STRAIGHTFLUSH
+            self._handbase = [permut[i] for i in suited_handbase]
             return True
 
         return False
 
     def _setFourOfAKind(self):
-        self.handenum = Hand.FOUROFAKIND
+        self._handenum = Hand.FOUROFAKIND
 
         hindex = -1
         for valnum in self._ranknums:
             hindex += valnum
             if valnum == 4: break
 
-        self.handbase = [hindex, hindex-1, hindex-2, hindex-3]
+        self._handbase = [hindex, hindex-1, hindex-2, hindex-3]
 
     def _setFullHouse(self):
-        self.handenum = Hand.FULLHOUSE
+        self._handenum = Hand.FULLHOUSE
 
         threes, twos = None, None
         hindex = self.ncards
@@ -165,64 +193,64 @@ class HandParser:
                 twos = hindex
                 if threes is not None: break
 
-        self.handbase = [threes, threes+1, threes+2, twos, twos+1]
+        self._handbase = [threes, threes+1, threes+2, twos, twos+1]
 
     def _setFlush(self):
-        self.handenum = Hand.FLUSH
-        self.handbase = [0] * 5
+        self._handenum = Hand.FLUSH
+        self._handbase = [0] * 5
 
         counter = 0
         for i in reversed(range(self.ncards)):
             if self.cards[i][1] == self._flushsuit:
-                self.handbase[counter] = i
+                self._handbase[counter] = i
                 counter += 1
                 if counter == 5: break
 
     def _setStraight(self):
-        self.handenum = Hand.STRAIGHT
-        self.handbase = self._straightindexes
+        self._handenum = Hand.STRAIGHT
+        self._handbase = self._straightindices
 
     def _setThreeOfAKind(self):
-        self.handenum = Hand.THREEOFAKIND
+        self._handenum = Hand.THREEOFAKIND
 
         hindex = -1
         for valnum in self._ranknums:
             hindex += valnum
             if valnum == 3: break
 
-        self.handbase = [hindex, hindex-1, hindex-2]
+        self._handbase = [hindex, hindex-1, hindex-2]
 
     def _setTwoPair(self):
-        self.handenum = Hand.TWOPAIR
-        self.handbase.clear()
+        self._handenum = Hand.TWOPAIR
+        self._handbase.clear()
 
         hindex, paircounter = self.ncards, 0
         for valnum in reversed(self._ranknums):
             hindex -= valnum
             if valnum == 2:
-                self.handbase.extend([hindex+1, hindex])
+                self._handbase.extend([hindex+1, hindex])
                 paircounter += 1
                 if paircounter == 2: break
 
     def _setOnePair(self):
-        self.handenum = Hand.ONEPAIR
+        self._handenum = Hand.ONEPAIR
 
         hindex = -1
         for valnum in self._ranknums:
             hindex += valnum
             if valnum == 2: break
 
-        self.handbase = [hindex, hindex-1]
+        self._handbase = [hindex, hindex-1]
 
     def _setHighCard(self):
-        self.handenum = Hand.HIGHCARD
-        self.handbase = [self.ncards - 1]
+        self._handenum = Hand.HIGHCARD
+        self._handbase = [self.ncards - 1]
 
     def _setHand(self):
         pairnums = [0] * 5
         for num in self._ranknums: pairnums[num] += 1
 
-        if None not in [self._straightindexes, self._flushsuit] \
+        if None not in [self._straightindices, self._flushsuit] \
         and self._setStraightFlush():
             pass
         elif pairnums[4]:
@@ -231,7 +259,7 @@ class HandParser:
             self._setFullHouse()
         elif self._flushsuit is not None:
             self._setFlush()
-        elif self._straightindexes is not None:
+        elif self._straightindices is not None:
             self._setStraight()
         elif pairnums[3]:
             self._setThreeOfAKind()
@@ -243,19 +271,23 @@ class HandParser:
             self._setHighCard()
 
     def _setKickers(self):
-        self.kickers.clear()
+        self._kickers.clear()
         
         inhand = [False] * self.ncards
-        for i in self.handbase: inhand[i] = True
+        for i in self._handbase: inhand[i] = True
         
-        i, lim = self.ncards - 1, 5 - len(self.handbase)
-        while len(self.kickers) < lim and i >= 0:
-            if not inhand[i]: self.kickers.append(i)
+        i, lim = self.ncards - 1, 5 - len(self._handbase)
+        while len(self._kickers) < lim and i >= 0:
+            if not inhand[i]: self._kickers.append(i)
             i -= 1
-
+    
+    # with introduction of reactive parsing, this method should
+    # be treated privately, but renaming parse to _parse would
+    # change the class interface
     def parse(self):
         self._setHand()
         self._setKickers()
+        self._parsed = True
 
 
 class HandParserGroup(list):

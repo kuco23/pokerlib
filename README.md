@@ -1,12 +1,9 @@
 # pokerlib
 [![PyPI version](https://badge.fury.io/py/pokerlib.svg)](https://pypi.org/project/pokerlib)
 
-A lightweight Python poker library that focuses on simplifying a poker game implementation
-when its io is supplied. It includes modules that help with hand parsing and poker game continuation.
+A lightweight Python poker library that focuses on simplifying a poker game implementation when its io is supplied. It includes modules that help with hand parsing and poker game continuation.
 
-One application of this library was made by the PokerMessenger app,
-which supplies library with io in the form of messenger group threads.
-The app's repo is at https://github.com/kuco23/pokermessenger.
+One application of this library was made by the PokerMessenger app, which supplies library with io in the form of messenger group threads. The app's repo is at https://github.com/kuco23/pokermessenger.
 
 To install, run 
 ```bash
@@ -38,18 +35,17 @@ board = [
     (Rank.TWO, Suit.HEART)
 ]
 
-# This is the same as adding the cards 
-# in the HandParser constructor
+# add new cards to each hand
 hand1 += board # add the board to hand1
 hand2 += board # add the board to hand2
-
-hand1.parse()
-hand2.parse()
 
 print(hand1.handenum) # Hand.STRAIGHTFLUSH
 print(hand2.handenum) # Hand.STRAIGHTFLUSH
 print(hand1 > hand2) # True
 ```
+
+> **note:**
+> In the previous version, each hand had to be parsed manually, now calling any of the methods requiring the hand to be parsed, triggers parsing. Note that the only way to add new cards to a hand is through the `__iadd__` method. If this method is called with hand already parsed, it logs that a new parsing is required.
 
 It is also possible to fetch hand's kickers.
 
@@ -64,7 +60,6 @@ hand = HandParser([
     (Rank.KING, Suit.CLUB)
 ])
 
-hand.parse()
 print(list(hand.kickercards))
 # [
 #   (<Rank.ACE: 12>, <Suit.CLUB: 1>),
@@ -73,7 +68,7 @@ print(list(hand.kickercards))
 # ]
 ```
 
-Note that `kickers` attribute saves the indices of `hand.cards` that form `kickercards`.
+Note that the attribute `kickers` saves the indices of `hand.cards` that form `kickercards`.
 
 Using HandParser, we can estimate the probability of a given hand winning the game with given known cards on the table (as implemented in another python cli-app [here](https://github.com/cookpete/poker-odds)). We do this by repeatedly random-sampling hands, then averaging the wins. Mathematically, this process converges to the probability by the law of large numbers.
 
@@ -97,7 +92,6 @@ def getWinningProbabilities(players_cards, board=[], n=1000):
             HandParser(player_cards + board + board_)
             for player_cards in players_cards
         ]
-        for hand in hands: hand.parse()
         winner = max(hands)
         for i, hand in enumerate(hands):
             if hand == winner: wins[i] += 1
@@ -135,8 +129,8 @@ table = MyTable(
 )
 ```
 
-Players could be passed inside MyTable constructor, 
-but as they usually join the table after its definition, 
+Players could be passed inside MyTable constructor,
+but as they usually join the table after its definition,
 we will do that below.
 
 ```python
@@ -156,7 +150,7 @@ table += [player1, player2]
 ```
 
 Communication with the `table` object is established through specified enums,
-which can be modified by overriding table's `publicIn` method. 
+which can be modified by overriding table's `publicIn` method.
 Using enums, we can implement a poker game as shown below.
 
 ```python
@@ -174,11 +168,7 @@ table.publicIn(player1.id, RoundPublicInId.ALLIN)
 table.publicIn(player2.id, RoundPublicInId.CALL)
 ```
 
-Wrong inputs are mostly ignored, though they can produce a response, 
-when that seems useful. As noted before, when providing input,
-the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`)
-along with additional data that depends on the output id.
-For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
+Wrong inputs are mostly ignored, though they can produce a response, when that seems useful. As noted before, when providing input, the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`) along with additional data that depends on the output id. For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
 
 A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). A simple command line game, where you respond by enum names, can be implemented as below (for working version check `tests/round_test.py`).
 
