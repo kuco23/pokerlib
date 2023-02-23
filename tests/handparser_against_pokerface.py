@@ -26,7 +26,7 @@ def indexedPokerfaceHand(seed):
         parse_cards(''.join(cards[:2])),
         parse_cards(''.join(cards[2:])))
 
-for i in range(n_tests):
+for _ in range(n_tests):
     seed_1 = sample(range(len(POKERLIB_CARDS)), 7)
     seed_2 = sample(range(len(POKERLIB_CARDS)), 7)
     pokerlib_hand_1 = indexedPokerlibHand(seed_1)

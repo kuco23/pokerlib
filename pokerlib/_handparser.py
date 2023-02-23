@@ -40,10 +40,8 @@ class HandParser:
             if self._suitnums[suit] >= 5:
                 self._flushsuit = suit
                 break
-
-        self._straightindices = self._getStraightIndices(
-            self._ranknums
-        )
+        
+        self._straightindices = None
     
     @property
     @reactiveParse
@@ -131,9 +129,6 @@ class HandParser:
             if self._suitnums[suit] >= 5:
                 self._flushsuit = suit
                 break
-
-        self._straightindices = \
-            self._getStraightIndices(self._ranknums)
 
     @staticmethod
     def _getStraightIndices(valnums):
@@ -247,12 +242,15 @@ class HandParser:
         self._handbase = [self.ncards - 1]
 
     def _setHand(self):
+        self._straightindices = self._getStraightIndices(
+            self._ranknums)
+
         pairnums = [0] * 5
         for num in self._ranknums: pairnums[num] += 1
 
-        if None not in [self._straightindices, self._flushsuit] \
-        and self._setStraightFlush():
-            pass
+        if self._straightindices is not None \
+            and self._flushsuit is not None \
+            and self._setStraightFlush(): pass
         elif pairnums[4]:
             self._setFourOfAKind()
         elif pairnums[3] == 2 or pairnums[3] == 1 and pairnums[2] >= 1:
