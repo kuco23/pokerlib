@@ -19,7 +19,7 @@ from ._handparser import HandParser, HandParserGroup
 ║   it updates properties which make it          ║
 ║   ready for the next valid input.              ║
 ║                                                ║
-╚════════════════════════════════════════════════╝ 
+╚════════════════════════════════════════════════╝
 """
 
 # Round's user input interface includes:
@@ -31,7 +31,7 @@ from ._handparser import HandParser, HandParserGroup
 
 # kwargs arguments for publicOut and privateOut are
 # basic immutable round objects.
-# additional Round attributes can be cached by overriding 
+# additional Round attributes can be cached by overriding
 # publicOut and privateOut methods, when needed for io purposes
 
 class AbstractRound(ABC):
@@ -50,7 +50,7 @@ class AbstractRound(ABC):
 
         self.board = list()
         self.turn = None
-        
+
         self._deck = self._deckIterator()
         self._turn_generator = self._turnGenerator()
 
@@ -69,7 +69,7 @@ class AbstractRound(ABC):
         next(self._turn_generator)
         self._dealBlinds()
         self._processState()
-    
+
     def __repr__(self):
         return f'Round({self.players}, {self.board})'
 
@@ -131,7 +131,7 @@ class AbstractRound(ABC):
     def _shiftCurrentPlayer(self):
         i = self.current_index
         self.current_index = self.players.nextActiveIndex(i)
-    
+
     def _pots_balanced(self):
         active_pots = [
             player.turn_stake[self.turn]
@@ -342,16 +342,16 @@ class AbstractRound(ABC):
     def _processAction(self, action, raise_by=0):
         self._executeAction(action, raise_by)
         self.current_player.played_turn = True
-        self._processState() 
+        self._processState()
 
     def _close(self):
         self.finished = True
         self.publicOut(RoundPublicOutId.ROUNDFINISHED)
-    
+
     def publicIn(self, player_id, action, **kwargs):
         """Processes invalidated user input"""
         ...
-        
+
     def privateOut(self, player_id, out_id, **kwargs):
         """Override player out implementation"""
         ...
@@ -382,9 +382,9 @@ class Round(AbstractRound):
            if to_call < player.money:
                 self._processAction(RoundPublicInId.RAISE, raise_by)
         elif (
-            action is RoundPublicInId.CALL or 
-            action is RoundPublicInId.ALLIN or 
-            action is RoundPublicInId.FOLD 
+            action is RoundPublicInId.CALL or
+            action is RoundPublicInId.ALLIN or
+            action is RoundPublicInId.FOLD
         ): self._processAction(action, raise_by)
 
     def privateOut(self, player_id, out_id, **kwargs):
@@ -400,20 +400,20 @@ class Round(AbstractRound):
         kwargs.update(self.extendedPublicOut(out_id, kwargs))
         out = self.PublicOut(out_id, kwargs)
         self.public_out_queue.append(out)
-    
+
     def extendedPrivateOut(self, player_id, out_id, kwargs):
         """Relevant private-out arguments from round instance state"""
         player = self.players.getPlayerById(player_id)
         if out_id is RoundPrivateOutId.DEALTCARDS:
             return {'cards': player.cards}
         else: return dict()
-        
+
     def extendedPublicOut(self, out_id, kwargs):
         """Relevant public-out arguments from round instance state"""
         if out_id is RoundPublicOutId.NEWTURN:
             return {'board': self.board}
-        elif out_id is RoundPublicOutId.SMALLBLIND: 
-            return {'small_blind': self.small_blind} 
+        elif out_id is RoundPublicOutId.SMALLBLIND:
+            return {'small_blind': self.small_blind}
         elif out_id is RoundPublicOutId.BIGBLIND:
             return {'big_blind': self.big_blind}
         elif out_id is RoundPublicOutId.PUBLICCARDSHOW:
@@ -422,9 +422,8 @@ class Round(AbstractRound):
         elif out_id is RoundPublicOutId.DECLAREFINISHEDWINNER:
             player = self.players.getPlayerById(kwargs['player_id'])
             return {
-                'cards': player.cards, 
+                'cards': player.cards,
                 'handname': player.hand.handenum,
                 'hand': player.hand.handbasecards
             }
         else: return dict()
-    

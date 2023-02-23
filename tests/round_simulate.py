@@ -21,16 +21,16 @@ def roundSimulation(nplayers, buyin, sb, bb):
         lambda i: Player(None, i, f"player{i}", buyin),
         range(nplayers)
     ))
-    
+
     table = MyTable(None, nplayers, players, buyin, sb, bb)
 
     while table:
         while table and not table.round:
             table.publicIn(
-                table.players[0].id, 
+                table.players[0].id,
                 TablePublicInId.STARTROUND
             )
-            
+
         player = table.round.current_player
         inp = input(f"require input from {player.id}: ")
 

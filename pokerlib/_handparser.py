@@ -28,7 +28,7 @@ class HandParser:
         self._handenum = None
         self._handbase = []
         self._kickers = []
-        
+
         self._ranknums = [0] * 13
         self._suitnums = [0] * 4
         for rank, suit in cards:
@@ -40,14 +40,14 @@ class HandParser:
             if self._suitnums[suit] >= 5:
                 self._flushsuit = suit
                 break
-        
+
         self._straightindices = None
-    
+
     @property
     @reactiveParse
     def handenum(self):
         return self._handenum
-    
+
     @property
     @reactiveParse
     def handbase(self):
@@ -270,15 +270,15 @@ class HandParser:
 
     def _setKickers(self):
         self._kickers.clear()
-        
+
         inhand = [False] * self.ncards
         for i in self._handbase: inhand[i] = True
-        
+
         i, lim = self.ncards - 1, 5 - len(self._handbase)
         while len(self._kickers) < lim and i >= 0:
             if not inhand[i]: self._kickers.append(i)
             i -= 1
-    
+
     # with introduction of reactive parsing, this method should
     # be treated privately, but renaming parse to _parse would
     # change the class interface

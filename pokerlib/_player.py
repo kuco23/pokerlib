@@ -1,5 +1,5 @@
 class Player:
-        
+
     def __init__(self, table_id, _id, name, money):
         self.table_id = table_id
         self.id = _id
@@ -13,7 +13,7 @@ class Player:
 
         self.stake = 0
         self.turn_stake = [0, 0, 0, 0]
-        
+
         self.played_turn = False
 
     @property
@@ -22,7 +22,7 @@ class Player:
 
     def __repr__(self):
         return f"Player({self.name}, {self.money})"
-        
+
     def __str__(self):
         return str(self.name)
 
@@ -72,7 +72,7 @@ class PlayerGroup(list):
         for player in self:
             if player.id == _id:
                 return player
-    
+
     def getPlayerByAttr(self, attr, val):
         for player in self:
             if getattr(player, attr) == val:
@@ -115,7 +115,7 @@ class PlayerGroup(list):
             lambda player: player.money <= money,
             self
         ))
-    
+
     def getPlayersWithMoreMoney(self, money):
         return type(self)(filter(
             lambda player: player.money >= money,

@@ -31,7 +31,7 @@ class Hand(IntEnum):
     FULLHOUSE = 6
     FOUROFAKIND = 7
     STRAIGHTFLUSH = 8
-    
+
 class Turn(IntEnum):
     PREFLOP = 0
     FLOP = 1
@@ -83,4 +83,3 @@ class TablePrivateOutId(IntEnum):
     BUYINTOOLOW = 1
     TABLEFULL = 2
     PLAYERALREADYATTABLE = 3
-    
