@@ -1,22 +1,23 @@
 # pokerlib
 [![PyPI version](https://badge.fury.io/py/pokerlib.svg)](https://pypi.org/project/pokerlib)
 
-A lightweight Python poker library that focuses on simplifying a poker game implementation when its io is supplied. It includes modules that help with hand parsing and poker game continuation.
+A lightweight Python poker library, focusing on simplifying a Texas hold'em poker game implementation, when its io is supplied. It includes modules that help with hand parsing and poker game continuation.
 
-One application of this library was made by the PokerMessenger app, which supplies library with io in the form of messenger group threads. The app's repo is at https://github.com/kuco23/pokermessenger.
-
-To install, run 
+To install, run
 ```bash
 pip install pokerlib
 ```
 
 ## Usage
-Library consists of a module for parsing cards, which can be used seperately, and modules that aid in running a poker game.
+Library consists of a module for parsing cards, which can be used separately, and modules that aid in running a poker game.
 
 ### HandParser
-This module helps with parsing hands. A hand usually consists of 2 dealt cards plus 5 on the board, and `HandParser` is optimized to work with up to 7 cards (otherwise flushes and straights require some small additional work). A card is defined as a pair of two enums. All of the enums used are of `IntEnum` type, so you can also freely interchange them for integers. Below is an example of how to construct two different hands and then compare them.
+This module takes care of hand parsing. A hand usually consists of 2 dealt cards plus 5 on the board, and `HandParser` is heavily optimized to work with up to 7 cards (with more than 7 cards, this is no longer Texas hold'em). A card is defined as a pair of two enums - Rank and Suit. All of the enums used are of `IntEnum` type, so you can also freely interchange them for integers. Below is an example of how to construct two different hands and then compare them.
 
 ```python
+from pokerlib import HandParser
+from pokerib.enums import Rank, Suit
+
 hand1 = HandParser([
     (Rank.KING, Suit.SPADE),
     (Rank.ACE, Suit.SPADE)
@@ -45,7 +46,7 @@ print(hand1 > hand2) # True
 ```
 
 > **note:**
-> In the previous version, each hand had to be parsed manually, now calling any of the methods requiring the hand to be parsed, triggers parsing. Note that the only way to add new cards to a hand is through the `__iadd__` method. If this method is called with hand already parsed, it logs that a new parsing is required.
+> In the previous version, each hand had to be parsed manually with `hand.parse()`, now calling any of the methods requiring the hand to be parsed, triggers parsing automatically. This only happens once, except if the cards in a given hand change. The only way cards in a hand should change is through the `__iadd__` method. If this method is called with hand already parsed, the hand is considered unparsed.
 
 It is also possible to fetch hand's kickers.
 
@@ -67,9 +68,6 @@ print(list(hand.kickercards))
 #   (<Rank.TEN: 8>, <Suit.HEART: 3>)
 # ]
 ```
-
-Note that the attribute `kickers` saves the indices of `hand.cards` that form `kickercards`.
-
 Using HandParser, we can estimate the probability of a given hand winning the game with given known cards on the table (as implemented in another python cli-app [here](https://github.com/cookpete/poker-odds)). We do this by repeatedly random-sampling hands, then averaging the wins. Mathematically, this process converges to the probability by the law of large numbers.
 
 ```python
@@ -97,7 +95,7 @@ def getWinningProbabilities(players_cards, board=[], n=1000):
             if hand == winner: wins[i] += 1
 
     return [win / n for win in wins]
-    
+
 w1, w2 = getWinningProbabilities([
     [(Rank.ACE, Suit.HEART), (Rank.KING, Suit.HEART)],
     [(Rank.KING, Suit.SPADE), (Rank.KING, Suit.DIAMOND)]
@@ -178,7 +176,7 @@ table = ...
 while table:
     while table and not table.round:
         table.publicIn(
-            table.players[0].id, 
+            table.players[0].id,
             TablePublicInId.STARTROUND
         )
 
@@ -197,15 +195,18 @@ while table:
 ```
 
 ## Tests
-Basic tests for this library are included. You can test handparser by running
+Basic tests for this library are included. You can test HandParser by running
 ```bash
-python tests/handparser.py
+python tests/handparser_reactive.py
 ```
-and the poker game by calling
+initiate a poker round simulation with
 ```bash
-python tests/round_test.py <player_number>
+python tests/round_test.py <number_of_players>
 ```
-which will run a poker game simulation with raw data getting printed to stdout.
+which will run a poker game simulation with raw data getting printed to stdout. The HandParser functionality was also tested against another poker library [pokerface](https://github.com/AussieSeaweed/pokerface). You can run those tests with
+```bash
+python tests/handparser_against_pokerface.py
+```
 
 ## License
 GNU General Public License v3.0
