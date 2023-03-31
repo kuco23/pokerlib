@@ -44,6 +44,7 @@ class RoundPublicInId(IntEnum):
     CALL = 2
     RAISE = 3
     ALLIN = 4
+    SHOWCARDS = 5
 
 # codes sent from round to player
 class RoundPrivateOutId(IntEnum):

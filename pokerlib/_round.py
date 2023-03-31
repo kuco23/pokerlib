@@ -40,6 +40,7 @@ class AbstractRound(ABC):
     def __init__(self, _id, players, button, small_blind, big_blind):
         self.id = _id
         self.finished = False
+        self.win_player = None
 
         self.small_blind = small_blind
         self.big_blind = big_blind
@@ -199,6 +200,8 @@ class AbstractRound(ABC):
             money_won = won,
         )
 
+        return self._pre_close(winner)
+
     def _dealWinnings(self):
         stake_sorted = type(self.players)(add(
             sorted(
@@ -267,8 +270,7 @@ class AbstractRound(ABC):
             return self._close()
 
         elif not_folded == 1:
-            self._dealPrematureWinnings()
-            return self._close()
+            return self._dealPrematureWinnings()
 
         elif active <= 1 and pots_balanced:
             for _ in self._turn_generator: pass
@@ -339,13 +341,32 @@ class AbstractRound(ABC):
         elif action is RoundPublicInId.ALLIN:
             self._allin()
 
+    def _show_winner_cards(self, show_cards):
+        if not show_cards:
+            return self._close()
+        self.publicOut(
+            RoundPublicOutId.PUBLICCARDSHOW,
+            player_id=self.win_player.id
+        )
+        return self._close()
+
     def _processAction(self, action, raise_by=0):
         self._executeAction(action, raise_by)
         self.current_player.played_turn = True
         self._processState()
 
+    def _pre_close(self, win_player):
+        self.win_player = win_player
+        self.publicOut(
+            RoundPublicOutId.PLAYERACTIONREQUIRED,
+            player_id=win_player.id,
+            to_call=0,
+            show_cards=True
+        )
+
     def _close(self):
         self.finished = True
+        self.win_player = None
         self.publicOut(RoundPublicOutId.ROUNDFINISHED)
 
     def publicIn(self, player_id, action, **kwargs):
@@ -370,8 +391,11 @@ class Round(AbstractRound):
         self.private_out_queue = deque([])
         super().__init__(*args)
 
-    def publicIn(self, player_id, action, raise_by=0):
+    def publicIn(self, player_id, action, raise_by=0, show_cards=False):
         # public in must come from current player
+        if self.win_player is not None and self.win_player.id == player_id:
+            self._show_winner_cards(show_cards)
+            return
         player = self.current_player
         if player_id != player.id: return
 

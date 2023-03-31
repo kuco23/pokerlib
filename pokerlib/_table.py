@@ -179,7 +179,7 @@ class Table(ValidatedTable):
             if not self.round: self.publicOut(
                 TablePublicOutId.ROUNDNOTINITIALIZED)
             else: self.round.publicIn(
-                player_id, action, kwargs.get('raise_by'))
+                player_id, action, kwargs.get('raise_by'), kwargs.get('show_cards'))
 
         elif action in TablePublicInId:
             if action is TablePublicInId.STARTROUND:
