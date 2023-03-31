@@ -27,7 +27,7 @@ class AbstractTable(ABC):
 
     @property
     def nplayers(self):
-        return len(self.players)
+        return len(self.players.get_players_group())
 
     def __repr__(self):
         return f'Table({self.players})'
@@ -54,6 +54,16 @@ class AbstractTable(ABC):
         for player in players: self._addPlayer(player)
         return self
 
+    def addPlayer(self, player, index):
+        if self.players.seat_place(player, index):
+            self.publicOut(
+                TablePublicOutId.PLAYERJOINED,
+                player_id = player.id,
+                player_seat = index
+            )
+            return True
+        return False
+
     def __isub__(self, players):
         for player in players: self._removePlayer(player)
         return self
@@ -69,10 +79,11 @@ class AbstractTable(ABC):
                 self._removePlayer(p)
 
     def _addPlayer(self, player):
-        self.players.append(player)
+        seat_index = self.players.append(player)
         self.publicOut(
             TablePublicOutId.PLAYERJOINED,
-            player_id = player.id
+            player_id = player.id,
+            player_seat = seat_index
         )
 
     def _removePlayer(self, player):
@@ -96,7 +107,7 @@ class AbstractTable(ABC):
     def _newRound(self, round_id):
         self.round = self.RoundClass(
             round_id,
-            shallowcopy(self.players),
+            self.players.get_players_group(),
             self.button,
             self.small_blind,
             self.big_blind
@@ -132,7 +143,7 @@ class ValidatedTable(AbstractTable):
         self, _id, seats, players,
         buyin, small_blind, big_blind
     ):
-        player_sprite = type(players)([])
+        player_sprite = type(players)([None] * seats)
         super().__init__(
             _id, seats, player_sprite,
             buyin, small_blind, big_blind

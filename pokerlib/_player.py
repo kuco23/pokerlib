@@ -133,3 +133,56 @@ class PlayerGroup(list):
         return type(self)(
             [player for player in self if player == winner]
         )
+
+
+class PlayerSeats(list):
+    def __contains__(self, player):
+        for p in self:
+            if p is not None and p.id == player.id:
+                return True
+        return False
+
+    def seat_place(self, player, ind: int) -> bool:
+        if ind < len(self) and self[ind] is None:
+            self[ind] = player
+            return True
+        return False
+
+    def remove(self, players):
+        removal_ids = set(map(lambda x: x.id, players))
+        for i in range(len(self)):
+            p = super().__getitem__(i)
+            if p is not None and p.id in removal_ids:
+                self[i] = None
+
+    def append(self, __object: Player):
+        for i in range(len(self)):
+            p = super().__getitem__(i)
+            if p is None:
+                self[i] = __object
+                return i
+
+    def __iter__(self):
+        for p in super().__iter__():
+            if p is not None:
+                yield p
+
+    def seats(self):
+        return super().__iter__()
+
+    def get_players_group(self) -> PlayerGroup:
+        return PlayerGroup(filter(
+            lambda player: player is not None,
+            self
+        ))
+
+    def __add__(self, other):
+        copy = type(self)(super().__add__([]))
+        for p in other:
+            copy.append(p)
+        return copy
+
+    def getPlayerById(self, _id):
+        for player in self:
+            if player.id == _id:
+                return player
