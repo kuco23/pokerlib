@@ -46,12 +46,6 @@ class PlayerGroup(list):
         isl = isinstance(ret, list)
         return type(self)(ret) if isl else ret
 
-    def __contains__(self, player):
-        for p in self:
-            if p.id == player.id:
-                return True
-        return False
-
     def __add__(self, other):
         return type(self)(super().__add__(other))
 
@@ -99,9 +93,9 @@ class PlayerGroup(list):
         return True
 
     def winners(self):
-        winner = max(self)
+        winner = max(self, key=lambda x: x.hand)
         return type(self)(
-            [player for player in self if player == winner]
+            [player for player in self if player.hand == winner.hand]
         )
 
 
@@ -122,6 +116,12 @@ class PlayerSeats(list):
         for p in super().__iter__():
             if p is not None:
                 yield p
+
+    def __contains__(self, player):
+        for p in self:
+            if p.id == player.id:
+                return True
+        return False
 
     def seats(self):
         return super().__iter__()

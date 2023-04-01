@@ -36,7 +36,7 @@ class AbstractTable(ABC):
         return f'Table({self.seats})'
 
     def __bool__(self):
-        return 2 <= self.nplayers <= self.n_seats
+        return 2 <= self.nplayers <= self.nseats
 
     def __eq__(self, other):
         return self.id == other.id
@@ -162,7 +162,7 @@ class ValidatedTable(AbstractTable):
         if player.money < self.buyin: self.privateOut(
             player.id, TablePrivateOutId.BUYINTOOLOW,
             table_id=self.id)
-        elif self.nplayers >= self.n_seats: self.privateOut(
+        elif self.nplayers >= self.nseats: self.privateOut(
             player.id, TablePrivateOutId.TABLEFULL,
             table_id=self.id)
         elif player in self: self.privateOut(
