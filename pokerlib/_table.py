@@ -2,12 +2,7 @@ from abc import ABC
 from copy import copy as shallowcopy
 
 from ._round import AbstractRound, Round
-from .enums import *
-
-
-# Table assumes added players have enough funds to join.
-# This should be taken care when Player is created from
-# User, before joining a table.
+from .enums import TablePublicInId, TablePrivateOutId, TablePublicOutId
 
 class AbstractTable(ABC):
     RoundClass = AbstractRound
@@ -85,7 +80,7 @@ class AbstractTable(ABC):
         if self.round and player in self.round:
             if player.id == self.round.current_player.id:
                 self.round.publicIn(
-                    player.id, RoundPublicInId.FOLD
+                    player.id, self.RoundClass.PublicInId.FOLD
                 )
             else:
                 player.is_folded = True
@@ -178,7 +173,7 @@ class Table(ValidatedTable):
 
     def publicIn(self, player_id, action, **kwargs):
 
-        if action in RoundPublicInId:
+        if action in self.RoundClass.PublicInId:
             if not self.round: self.publicOut(
                 self.PublicOutId.ROUNDNOTINITIALIZED)
             else: self.round.publicIn(
