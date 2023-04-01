@@ -11,6 +11,9 @@ from .enums import *
 
 class AbstractTable(ABC):
     RoundClass = AbstractRound
+    PublicInId = TablePublicInId
+    PublicOutId = TablePublicOutId
+    PrivateOutId = TablePrivateOutId
 
     def __init__(
         self, _id, seats, players,
@@ -71,7 +74,7 @@ class AbstractTable(ABC):
     def _addPlayer(self, player):
         self.players.append(player)
         self.publicOut(
-            TablePublicOutId.PLAYERJOINED,
+            self.PublicOutId.PLAYERJOINED,
             player_id = player.id
         )
 
@@ -89,7 +92,7 @@ class AbstractTable(ABC):
                 self.round._processState()
 
         self.publicOut(
-            TablePublicOutId.PLAYERREMOVED,
+            self.PublicOutId.PLAYERREMOVED,
             player_id = player.id,
         )
 
@@ -107,7 +110,7 @@ class AbstractTable(ABC):
         self._shiftButton()
         self._newRound(round_id)
         self.publicOut(
-            TablePublicOutId.NEWROUNDSTARTED,
+            self.PublicOutId.NEWROUNDSTARTED,
             round_id = round_id
         )
 
@@ -142,22 +145,22 @@ class ValidatedTable(AbstractTable):
     def _addPlayer(self, player):
         self._kickoutLosers()
         if player.money < self.buyin: self.privateOut(
-            player.id, TablePrivateOutId.BUYINTOOLOW,
+            player.id, self.PrivateOutId.BUYINTOOLOW,
             table_id=self.id)
         elif self.nplayers >= self.seats: self.privateOut(
-            player.id, TablePrivateOutId.TABLEFULL,
+            player.id, self.PrivateOutId.TABLEFULL,
             table_id=self.id)
         elif player in self: self.privateOut(
-            player.id, TablePrivateOutId.PLAYERALREADYATTABLE,
+            player.id, self.PrivateOutId.PLAYERALREADYATTABLE,
             table_id=self.id)
         else: super()._addPlayer(player)
 
     def _startRound(self, round_id):
         if self.round: self.publicOut(
-            TablePublicOutId.ROUNDINPROGRESS,
+            self.PublicOutId.ROUNDINPROGRESS,
             round_id=round_id, table_id=self.id)
         elif not self: self.publicOut(
-            TablePublicOutId.INCORRECTNUMBEROFPLAYERS,
+            self.PublicOutId.INCORRECTNUMBEROFPLAYERS,
             round_id=round_id, table_id=self.id)
         else: super()._startRound(round_id)
 
@@ -177,17 +180,17 @@ class Table(ValidatedTable):
 
         if action in RoundPublicInId:
             if not self.round: self.publicOut(
-                TablePublicOutId.ROUNDNOTINITIALIZED)
+                self.PublicOutId.ROUNDNOTINITIALIZED)
             else: self.round.publicIn(
                 player_id, action, kwargs.get('raise_by'))
 
-        elif action in TablePublicInId:
-            if action is TablePublicInId.STARTROUND:
+        elif action in self.PublicInId:
+            if action is self.PublicInId.STARTROUND:
                 self._startRound(kwargs.get('round_id'))
-            elif action is TablePublicInId.LEAVETABLE:
+            elif action is self.PublicInId.LEAVETABLE:
                 player = self.players.getPlayerById(player_id)
                 self._removePlayer(player)
-            elif action is TablePublicInId.BUYIN:
+            elif action is self.PublicInId.BUYIN:
                 self += [kwargs['player']]
 
         # has to be done after every publicIn call

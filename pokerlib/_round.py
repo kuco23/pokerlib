@@ -35,6 +35,9 @@ from ._handparser import HandParser, HandParserGroup
 # publicOut and privateOut methods, when needed for io purposes
 
 class AbstractRound(ABC):
+    PublicInId = RoundPublicInId
+    PublicOutId = RoundPublicOutId
+    PrivateOutId = RoundPrivateOutId
     __deck = [[rank, suit] for suit in Suit for rank in Rank]
 
     def __init__(self, _id, players, button, small_blind, big_blind):
@@ -54,7 +57,7 @@ class AbstractRound(ABC):
         self._deck = self._deckIterator()
         self._turn_generator = self._turnGenerator()
 
-        self.publicOut(RoundPublicOutId.NEWROUND)
+        self.publicOut(self.PublicOutId.NEWROUND)
 
         for player in self.players:
             player.resetState()
@@ -63,7 +66,7 @@ class AbstractRound(ABC):
 
             self.privateOut(
                 player.id,
-                RoundPrivateOutId.DEALTCARDS
+                self.PrivateOutId.DEALTCARDS
             )
 
         next(self._turn_generator)
@@ -122,7 +125,7 @@ class AbstractRound(ABC):
             self.board.extend(new_cards)
 
             self.publicOut(
-                RoundPublicOutId.NEWTURN,
+                self.PublicOutId.NEWTURN,
                 turn = turn
             )
 
@@ -163,7 +166,7 @@ class AbstractRound(ABC):
             player.is_all_in = True
 
             self.publicOut(
-                RoundPublicOutId.PLAYERALLIN,
+                self.PublicOutId.PLAYERALLIN,
                 player_id = player.id,
                 all_in_stake = all_in_stake
             )
@@ -175,7 +178,7 @@ class AbstractRound(ABC):
         self._addToPot(previous_player, self.small_blind)
 
         self.publicOut(
-            RoundPublicOutId.SMALLBLIND,
+            self.PublicOutId.SMALLBLIND,
             player_id = previous_player.id,
             turn_stake = previous_player.turn_stake[0]
         )
@@ -183,7 +186,7 @@ class AbstractRound(ABC):
         self._addToPot(self.current_player, self.big_blind)
 
         self.publicOut(
-            RoundPublicOutId.BIGBLIND,
+            self.PublicOutId.BIGBLIND,
             player_id = self.current_player.id,
             turn_stake = self.current_player.turn_stake[0]
         )
@@ -194,7 +197,7 @@ class AbstractRound(ABC):
         winner.money += won
 
         self.publicOut(
-            RoundPublicOutId.DECLAREPREMATUREWINNER,
+            self.PublicOutId.DECLAREPREMATUREWINNER,
             player_id = winner.id,
             money_won = won,
         )
@@ -213,7 +216,7 @@ class AbstractRound(ABC):
 
         for competitor in stake_sorted:
             self.publicOut(
-                RoundPublicOutId.PUBLICCARDSHOW,
+                self.PublicOutId.PUBLICCARDSHOW,
                 player_id = competitor.id
             )
 
@@ -252,7 +255,7 @@ class AbstractRound(ABC):
                     win_split.money += round(win_took)
 
                     self.publicOut(
-                        RoundPublicOutId.DECLAREFINISHEDWINNER,
+                        self.PublicOutId.DECLAREFINISHEDWINNER,
                         player_id = win_split.id,
                         money_won = round(win_took),
                         kickers = kickers
@@ -287,7 +290,7 @@ class AbstractRound(ABC):
         called = self.current_player.turn_stake[self.turn]
 
         self.publicOut(
-            RoundPublicOutId.PLAYERACTIONREQUIRED,
+            self.PublicOutId.PLAYERACTIONREQUIRED,
             player_id = self.current_player.id,
             to_call = self.turn_stake - called
         )
@@ -295,13 +298,13 @@ class AbstractRound(ABC):
     def _fold(self):
         self.current_player.is_folded = True
         self.publicOut(
-            RoundPublicOutId.PLAYERFOLD,
+            self.PublicOutId.PLAYERFOLD,
             player_id = self.current_player.id
         )
 
     def _check(self):
         self.publicOut(
-            RoundPublicOutId.PLAYERCHECK,
+            self.PublicOutId.PLAYERCHECK,
             player_id = self.current_player.id
         )
 
@@ -309,7 +312,7 @@ class AbstractRound(ABC):
         to_call = self.to_call
         self._addToPot(self.current_player, to_call)
         self.publicOut(
-            RoundPublicOutId.PLAYERCALL,
+            self.PublicOutId.PLAYERCALL,
             player_id = self.current_player.id,
             called = to_call
         )
@@ -318,7 +321,7 @@ class AbstractRound(ABC):
         to_call= self.to_call
         self._addToPot(self.current_player, to_call + raise_by)
         self.publicOut(
-            RoundPublicOutId.PLAYERRAISE,
+            self.PublicOutId.PLAYERRAISE,
             player_id = self.current_player.id,
             raised_by = raise_by
         )
@@ -328,15 +331,15 @@ class AbstractRound(ABC):
         self._addToPot(cp, cp.money)
 
     def _executeAction(self, action, raise_by):
-        if action is RoundPublicInId.FOLD:
+        if action is self.PublicInId.FOLD:
             self._fold()
-        elif action is RoundPublicInId.CHECK:
+        elif action is self.PublicInId.CHECK:
             self._check()
-        elif action is RoundPublicInId.CALL:
+        elif action is self.PublicInId.CALL:
             self._call()
-        elif action is RoundPublicInId.RAISE:
+        elif action is self.PublicInId.RAISE:
             self._raise(raise_by)
-        elif action is RoundPublicInId.ALLIN:
+        elif action is self.PublicInId.ALLIN:
             self._allin()
 
     def _processAction(self, action, raise_by=0):
@@ -346,7 +349,7 @@ class AbstractRound(ABC):
 
     def _close(self):
         self.finished = True
-        self.publicOut(RoundPublicOutId.ROUNDFINISHED)
+        self.publicOut(self.PublicOutId.ROUNDFINISHED)
 
     def publicIn(self, player_id, action, **kwargs):
         """Processes invalidated user input"""
@@ -376,15 +379,15 @@ class Round(AbstractRound):
         if player_id != player.id: return
 
         to_call = self.turn_stake - player.turn_stake[self.turn]
-        if action is RoundPublicInId.CHECK and to_call == 0:
-            self._processAction(RoundPublicInId.CHECK)
-        elif action is RoundPublicInId.RAISE:
+        if action is self.PublicInId.CHECK and to_call == 0:
+            self._processAction(self.PublicInId.CHECK)
+        elif action is self.PublicInId.RAISE:
            if to_call < player.money:
-                self._processAction(RoundPublicInId.RAISE, raise_by)
+                self._processAction(self.PublicInId.RAISE, raise_by)
         elif (
-            action is RoundPublicInId.CALL or
-            action is RoundPublicInId.ALLIN or
-            action is RoundPublicInId.FOLD
+            action is self.PublicInId.CALL or
+            action is self.PublicInId.ALLIN or
+            action is self.PublicInId.FOLD
         ): self._processAction(action, raise_by)
 
     def privateOut(self, player_id, out_id, **kwargs):
@@ -404,26 +407,26 @@ class Round(AbstractRound):
     def extendedPrivateOut(self, player_id, out_id, kwargs):
         """Relevant private-out arguments from round instance state"""
         player = self.players.getPlayerById(player_id)
-        if out_id is RoundPrivateOutId.DEALTCARDS:
+        if out_id is self.PrivateOutId.DEALTCARDS:
             return {'cards': player.cards}
         else: return dict()
 
     def extendedPublicOut(self, out_id, kwargs):
         """Relevant public-out arguments from round instance state"""
-        if out_id is RoundPublicOutId.NEWTURN:
+        if out_id is self.PublicOutId.NEWTURN:
             return {'board': self.board}
-        elif out_id is RoundPublicOutId.SMALLBLIND:
+        elif out_id is self.PublicOutId.SMALLBLIND:
             return {'small_blind': self.small_blind}
-        elif out_id is RoundPublicOutId.BIGBLIND:
+        elif out_id is self.PublicOutId.BIGBLIND:
             return {'big_blind': self.big_blind}
-        elif out_id is RoundPublicOutId.PUBLICCARDSHOW:
+        elif out_id is self.PublicOutId.PUBLICCARDSHOW:
             player = self.players.getPlayerById(kwargs['player_id'])
             return {'cards': player.cards}
-        elif out_id is RoundPublicOutId.DECLAREFINISHEDWINNER:
+        elif out_id is self.PublicOutId.DECLAREFINISHEDWINNER:
             player = self.players.getPlayerById(kwargs['player_id'])
             return {
                 'cards': player.cards,
                 'handname': player.hand.handenum,
-                'hand': player.hand.handbasecards
+                'hand': list(player.hand.handbasecards)
             }
         else: return dict()

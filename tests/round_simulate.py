@@ -2,18 +2,13 @@ import sys
 sys.path.append('../pokerlib')
 
 from argparse import ArgumentParser
-from pokerlib.enums import *
-from pokerlib import HandParser
 from pokerlib import Player, PlayerGroup
-from pokerlib import Table, Round
+from pokerlib import Table
 
 class MyTable(Table):
-
     def publicOut(self, _id, **kwargs):
-        super().publicOut(_id, **kwargs)
         print(_id, kwargs)
     def privateOut(self, _id, player, **kwargs):
-        super().privateOut(_id, player, **kwargs)
         print(_id, player, kwargs)
 
 def roundSimulation(nplayers, buyin, sb, bb):
@@ -28,17 +23,17 @@ def roundSimulation(nplayers, buyin, sb, bb):
         while table and not table.round:
             table.publicIn(
                 table.players[0].id,
-                TablePublicInId.STARTROUND
+                table.PublicInId.STARTROUND
             )
 
         player = table.round.current_player
         inp = input(f"require input from {player.id}: ")
 
-        if inp in RoundPublicInId.__members__:
-            action, raise_by = RoundPublicInId.__members__[inp], 0
-        elif inp.startswith(RoundPublicInId.RAISE.name):
+        if inp in table.round.PublicInId.__members__:
+            action, raise_by = table.round.PublicInId.__members__[inp], 0
+        elif inp.startswith(table.round.PublicInId.RAISE.name):
             raise_by = int(inp.split()[1])
-            action, raise_by = RoundPublicInId.RAISE, raise_by
+            action, raise_by = table.round.PublicInId.RAISE, raise_by
         else:
             continue
 
