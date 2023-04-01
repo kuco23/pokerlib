@@ -4,7 +4,7 @@ sys.path.append('../pokerlib')
 from argparse import ArgumentParser
 from pokerlib.enums import *
 from pokerlib import HandParser
-from pokerlib import Player, PlayerGroup
+from pokerlib import Player, PlayerSeats
 from pokerlib import Table, Round
 
 class MyTable(Table):
@@ -17,17 +17,16 @@ class MyTable(Table):
         print(_id, player, kwargs)
 
 def roundSimulation(nplayers, buyin, sb, bb):
-    players = PlayerGroup(map(
+    players = PlayerSeats(map(
         lambda i: Player(None, i, f"player{i}", buyin),
         range(nplayers)
     ))
-
-    table = MyTable(None, nplayers, players, buyin, sb, bb)
+    table = MyTable(None, players, buyin, sb, bb)
 
     while table:
         while table and not table.round:
             table.publicIn(
-                table.players[0].id,
+                table.seats[0].id,
                 TablePublicInId.STARTROUND
             )
 
