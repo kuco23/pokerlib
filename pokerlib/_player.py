@@ -26,14 +26,8 @@ class Player:
     def __str__(self):
         return str(self.name)
 
-    def __lt__(self, other):
-        return self.hand < other.hand
-
-    def __gt__(self, other):
-        return self.hand > other.hand
-
     def __eq__(self, other):
-        return self.hand == other.hand
+        return self.id == other.id
 
     def resetState(self):
         self.cards = tuple()
@@ -47,35 +41,23 @@ class Player:
 
 class PlayerGroup(list):
 
+    def __getitem__(self, i):
+        ret = super().__getitem__(i)
+        isl = isinstance(ret, list)
+        return type(self)(ret) if isl else ret
+
     def __contains__(self, player):
         for p in self:
             if p.id == player.id:
                 return True
         return False
 
-    def __getitem__(self, i):
-        ret = super().__getitem__(i)
-        isl = isinstance(ret, list)
-        return type(self)(ret) if isl else ret
-
     def __add__(self, other):
         return type(self)(super().__add__(other))
-
-    def remove(self, players):
-        removal_ids = list(map(lambda x: x.id, players))
-        self[:] = type(self)(filter(
-            lambda player: player.id not in removal_ids,
-            self
-        ))
 
     def getPlayerById(self, _id):
         for player in self:
             if player.id == _id:
-                return player
-
-    def getPlayerByAttr(self, attr, val):
-        for player in self:
-            if getattr(player, attr) == val:
                 return player
 
     def previousActivePlayer(self, i):
@@ -110,18 +92,6 @@ class PlayerGroup(list):
             self
         ))
 
-    def getPlayersWithLessMoney(self, money):
-        return type(self)(filter(
-            lambda player: player.money <= money,
-            self
-        ))
-
-    def getPlayersWithMoreMoney(self, money):
-        return type(self)(filter(
-            lambda player: player.money >= money,
-            self
-        ))
-
     def allPlayedTurn(self):
         for player in self:
             if not player.played_turn and player.is_active:
@@ -136,31 +106,17 @@ class PlayerGroup(list):
 
 
 class PlayerSeats(list):
-    def __contains__(self, player):
-        for p in self:
-            if p is not None and p.id == player.id:
-                return True
-        return False
 
-    def seat_place(self, player, ind: int) -> bool:
-        if ind < len(self) and self[ind] is None:
-            self[ind] = player
-            return True
-        return False
+    def __add__(self, other):
+        copy = type(self)(super().__add__([]))
+        for p in other:
+            copy.append(p)
+        return copy
 
-    def remove(self, players):
-        removal_ids = set(map(lambda x: x.id, players))
-        for i in range(len(self)):
-            p = super().__getitem__(i)
-            if p is not None and p.id in removal_ids:
-                self[i] = None
-
-    def append(self, __object: Player):
-        for i in range(len(self)):
-            p = super().__getitem__(i)
-            if p is None:
-                self[i] = __object
-                return i
+    def __getitem__(self, i):
+        ret = super().__getitem__(i)
+        isl = isinstance(ret, list)
+        return type(self)(ret) if isl else ret
 
     def __iter__(self):
         for p in super().__iter__():
@@ -170,17 +126,38 @@ class PlayerSeats(list):
     def seats(self):
         return super().__iter__()
 
-    def get_players_group(self) -> PlayerGroup:
+    def nFilled(self):
+        n = 0
+        for p in self:
+            if p is not None:
+                n += 1
+        return n
+
+    def seatFree(self, ind: int) -> bool:
+        return 0 <= ind < len(self) and self[ind] is None
+
+    def seatPlayerAt(self, player, ind: int) -> bool:
+        if self.seatFree(ind):
+            self[ind] = player
+            return True
+        return False
+
+    def remove(self, player):
+        i = self.index(player)
+        if i is not None:
+            self[i] = None
+
+    def append(self, player: Player):
+        for i, p in enumerate(super().__iter__()):
+            if p is None:
+                self[i] = player
+                return i
+
+    def getPlayerGroup(self) -> PlayerGroup:
         return PlayerGroup(filter(
             lambda player: player is not None,
             self
         ))
-
-    def __add__(self, other):
-        copy = type(self)(super().__add__([]))
-        for p in other:
-            copy.append(p)
-        return copy
 
     def getPlayerById(self, _id):
         for player in self:

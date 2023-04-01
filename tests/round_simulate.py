@@ -27,7 +27,7 @@ def roundSimulation(nplayers, buyin, sb, bb):
     while table:
         while table and not table.round:
             table.publicIn(
-                table.players[0].id,
+                table.seats[0].id,
                 TablePublicInId.STARTROUND
             )
 
