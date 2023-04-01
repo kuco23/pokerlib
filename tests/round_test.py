@@ -2,7 +2,7 @@ import sys
 sys.path.append('../pokerlib')
 from copy import deepcopy
 from pokerlib.enums import Turn
-from pokerlib import Table, Player, PlayerGroup
+from pokerlib import Table, Player, PlayerSeats
 
 class OutReturnTable(Table):
     cachedOutput = []
@@ -18,8 +18,8 @@ class OutReturnTable(Table):
 
 player1 = Player(0, 1, "player1", 1000)
 player2 = Player(0, 2, "player2", 1000)
-players = PlayerGroup([player1, player2])
-table = OutReturnTable(0, 6, players, 1000, 5, 10)
+players = PlayerSeats([player1, player2])
+table = OutReturnTable(0, players, 1000, 5, 10)
 
 # initial table outputs (in constructor)
 player1joined, player2joined = table.cachedOutput
