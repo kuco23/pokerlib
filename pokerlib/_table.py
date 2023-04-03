@@ -195,7 +195,7 @@ class Table(ValidatedTable):
             if not self.round: self.publicOut(
                 self.PublicOutId.ROUNDNOTINITIALIZED)
             else: self.round.publicIn(
-                player_id, action, kwargs.get('raise_by'))
+                player_id, action, **kwargs)
 
         elif action in self.PublicInId:
             if action is self.PublicInId.STARTROUND:
