@@ -192,7 +192,7 @@ class AbstractRound(ABC):
         )
 
     def _dealPrematureWinnings(self):
-        winner = self.players.getNotFoldedPlayers()[0]
+        winner, = self.players.getNotFoldedPlayers()
         won = sum(self.pot_size)
         winner.money += won
 

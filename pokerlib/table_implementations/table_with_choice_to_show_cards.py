@@ -1,7 +1,7 @@
 from itertools import chain
 from enum import IntEnum
 
-from ..enums import RoundPublicOutId, TablePublicOutId
+from ..enums import RoundPublicOutId
 from .._round import Round
 from .._table import Table
 
@@ -35,16 +35,22 @@ class RoundWithChoiceToShowCards(Round):
         if self._premature_winner_id is None:
             super()._close()
 
-    def publicOut(self, out_id, **kwargs):
-        # otherwise account for premature winner
-        super().publicOut(out_id, **kwargs)
-        if out_id is self.PublicOutId.DECLAREPREMATUREWINNER:
-            self.finished = False
-            self._premature_winner_id = kwargs['player_id']
-            self.publicOut(
-                self.PublicOutId.PLAYERCHOICEREQUIRED,
-                player_id = kwargs['player_id']
-            )
+    def _dealPrematureWinnings(self):
+        super()._dealPrematureWinnings()
+        winner, = self.players.getNotFoldedPlayers()
+        self._premature_winner_id = winner.id
+        self.publicOut(
+            self.PublicOutId.PLAYERCHOICEREQUIRED,
+            player_id = winner.id
+        )
+
+    def _showPrematureWinnerCards(self):
+        winner = self.players.getPlayerById(self._premature_winner_id)
+        self.publicOut(
+            self.PublicOutId.PLAYERREVEALCARDS,
+            player_id = winner.id,
+            cards = winner.cards
+        )
 
     def publicIn(self, player_id, action, raise_by=0, show_cards=False):
         # process all the standard inputs
@@ -54,13 +60,7 @@ class RoundWithChoiceToShowCards(Round):
             action is self.PublicInId.SHOWCARDS and
             self._premature_winner_id is not None and self._premature_winner_id == player_id
         ):
-            if show_cards:
-                player = self.players.getPlayerById(player_id)
-                self.publicOut(
-                    self.PublicOutId.PLAYERREVEALCARDS,
-                    player_id = player_id,
-                    cards = player.cards
-                )
+            if show_cards: self._showPrematureWinnerCards()
             self._premature_winner_id = None
             self._close()
 
