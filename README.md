@@ -68,39 +68,8 @@ print(list(hand.kickercards))
 #   (<Rank.TEN: 8>, <Suit.HEART: 3>)
 # ]
 ```
-Using HandParser, we can estimate the probability of a given hand winning the game with given known cards on the table (as implemented in another python cli-app [here](https://github.com/cookpete/poker-odds)). We do this by repeatedly random-sampling hands, then averaging the wins. Mathematically, this process converges to the probability by the law of large numbers.
+Using HandParser, we can [estimate the probability](https://github.com/kuco23/pokerlib/blob/master/examples/winning_probability.py) of a given hand winning the game with given known cards on the table (as implemented in another python cli-app [here](https://github.com/cookpete/poker-odds)). We do this by repeatedly random-sampling hands, then averaging the wins. Mathematically, this process converges to the probability by the law of large numbers.
 
-```python
-from random import sample
-from itertools import product
-from pokerlib import HandParser
-from pokerlib.enums import Rank, Suit
-
-def getWinningProbabilities(players_cards, board=[], n=1000):
-    cards = list(product(Rank, Suit))
-    for card in board: cards.remove(card)
-    for player_cards in players_cards:
-        for card in player_cards:
-            cards.remove(card)
-
-    wins = [0] * len(players_cards)
-    for i in range(n):
-        board_ = sample(cards, 5-len(board))
-        hands = [
-            HandParser(player_cards + board + board_)
-            for player_cards in players_cards
-        ]
-        winner = max(hands)
-        for i, hand in enumerate(hands):
-            if hand == winner: wins[i] += 1
-
-    return [win / n for win in wins]
-
-w1, w2 = getWinningProbabilities([
-    [(Rank.ACE, Suit.HEART), (Rank.KING, Suit.HEART)],
-    [(Rank.KING, Suit.SPADE), (Rank.KING, Suit.DIAMOND)]
-])
-```
 
 ### Poker Game
 A poker table can be established by providing its configuration.
@@ -108,28 +77,27 @@ A poker table object responds to given input with appropriate output,
 which can be customized by overriding the two functions producing it.
 
 ```python
-from pokerlib import Player, PlayerGroup, Table
+from pokerlib import Table, Player, PlayerSeats
 
-# just print the output
+# table that prints outputs
 class MyTable(Table):
     def publicOut(self, out_id, **kwargs):
         print(out_id, kwargs)
     def privateOut(self, player_id, out_id, **kwargs):
         print(out_id, kwargs)
 
+# define a new table
 table = MyTable(
     table_id = 0
-    seats = 2
-    players = PlayerGroup([])
+    seats = PlayerSeats([None] * 9)
     buyin = 100
     small_blind = 5
     big_blind = 10
 )
 ```
 
-Players could be passed inside MyTable constructor,
-but as they usually join the table after its definition,
-we will do that below.
+We could have seated players on the `seats` inside `MyTable` constructor,
+but let's add them to the defined table.
 
 ```python
 player1 = Player(
@@ -144,12 +112,15 @@ player2 = Player(
     name = 'bob',
     money = table.buyin
 )
-table += [player1, player2]
+# seat player1 at the first seat
+table += player1, 0
+# seat player2 at the first free seat
+table += player2
 ```
 
 Communication with the `table` object is established through specified enums,
 which can be modified by overriding table's `publicIn` method.
-Using enums, we can implement a poker game as shown below.
+Using enum IO identifiers, we can implement a poker game as shown below.
 
 ```python
 from pokerlib.enums import RoundPublicInId, TablePublicInId
@@ -166,7 +137,7 @@ table.publicIn(player1.id, RoundPublicInId.ALLIN)
 table.publicIn(player2.id, RoundPublicInId.CALL)
 ```
 
-Wrong inputs are mostly ignored, though they can produce a response, when that seems useful. As noted before, when providing input, the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`) along with additional data that depends on the output id. For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
+Wrong inputs are mostly ignored, though they can produce a response, when it seems useful. As noted before, when providing input, the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`) along with additional data that depends on the output id. For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
 
 A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). A simple command line game, where you respond by enum names, can be implemented as below (for working version check `tests/round_test.py`).
 
@@ -187,12 +158,15 @@ while table:
         action, raise_by = RoundPublicInId.__members__[inp], 0
     elif inp.startswith(RoundPublicInId.RAISE.name):
         raise_by = int(inp.split()[1])
-        action, raise_by = RoundPublicInId.RAISE, raise_by
+        action = RoundPublicInId.RAISE
     else:
         continue
 
     table.publicIn(player.id, action, raise_by=raise_by)
 ```
+
+Note that you can define your own IO identifiers for a generalized game,
+as shown in one example [here](https://github.com/kuco23/pokerlib/blob/master/pokerlib/implementations/_table_with_choice_to_show_cards.py).
 
 ## Tests
 Basic tests for this library are included. You can test HandParser by running
