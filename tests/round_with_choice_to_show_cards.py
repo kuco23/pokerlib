@@ -2,8 +2,7 @@ import sys
 sys.path.append('../pokerlib')
 from copy import deepcopy
 from pokerlib import Player, PlayerSeats
-from pokerlib.table_implementations import (
-    TableWithChoiceToShowCards, RoundWithChoiceToShowCards)
+from pokerlib.implementations import TableWithChoiceToShowCards
 
 class OutReturnTable(TableWithChoiceToShowCards):
     cachedOutput = []
