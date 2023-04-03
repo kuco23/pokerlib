@@ -18,8 +18,8 @@ class OutReturnTable(TableWithChoiceToShowCards):
 
 player1 = Player(0, 1, "player1", 1000)
 player2 = Player(0, 2, "player2", 1000)
-players = PlayerSeats([player1, player2])
-table = OutReturnTable(0, players, 1000, 5, 10)
+seats = PlayerSeats([player1, player2])
+table = OutReturnTable(0, seats, 1000, 5, 10)
 
 table.publicIn(player1.id, table.PublicInId.STARTROUND)
 table.publicIn(player1.id, table.round.PublicInId.CALL)

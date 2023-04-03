@@ -39,14 +39,14 @@ class AbstractTable(ABC):
     def __eq__(self, other):
         return self.id == other.id
 
+    def __len__(self):
+        return len(self.seats)
+
     def __contains__(self, player):
         return player in self.seats
 
-    def __getitem__(self, player_id):
-        for p in self.seats:
-            if player_id == p.id: return p
-        if self.round:
-            return self.round[player_id]
+    def __getitem__(self, i):
+        return self.seats[i]
 
     def __iter__(self):
         return iter(self.seats)
@@ -194,8 +194,7 @@ class Table(ValidatedTable):
         if action in self.RoundClass.PublicInId:
             if not self.round: self.publicOut(
                 self.PublicOutId.ROUNDNOTINITIALIZED)
-            else: self.round.publicIn(
-                player_id, action, **kwargs)
+            else: self.round.publicIn(player_id, action, **kwargs)
 
         elif action in self.PublicInId:
             if action is self.PublicInId.STARTROUND:
@@ -204,7 +203,10 @@ class Table(ValidatedTable):
                 player = self.seats.getPlayerById(player_id)
                 self._removePlayer(player)
             elif action is self.PublicInId.BUYIN:
-                self._addPlayerOnSeat(kwargs['player'], kwargs['index'])
+                if 'index' in kwargs:
+                    self._addPlayerOnSeat(kwargs['player'], kwargs['index'])
+                else:
+                    self._addPlayer(kwargs['player'])
 
         # has to be done after every publicIn call
         self._forceOutRoundQueue()
