@@ -2,7 +2,7 @@
 
 from . import enums
 from ._handparser import HandParser, HandParserGroup
-from ._player import Player, PlayerGroup
+from ._player import Player, PlayerGroup, PlayerSeats
 from ._round import Round
 from ._table import Table
 
@@ -19,5 +19,6 @@ __all__ = [
     'Player',
     'PlayerGroup',
     'Round',
-    'Table'
+    'Table',
+    'PlayerSeats'
 ]

@@ -2,12 +2,7 @@ from abc import ABC
 from copy import copy as shallowcopy
 
 from ._round import AbstractRound, Round
-from .enums import *
-
-
-# Table assumes added players have enough funds to join.
-# This should be taken care when Player is created from
-# User, before joining a table.
+from .enums import TablePublicInId, TablePrivateOutId, TablePublicOutId
 
 class AbstractTable(ABC):
     RoundClass = AbstractRound
@@ -16,12 +11,11 @@ class AbstractTable(ABC):
     PrivateOutId = TablePrivateOutId
 
     def __init__(
-        self, _id, seats, players,
+        self, _id, seats,
         buyin, small_blind, big_blind
     ):
         self.id = _id
         self.seats = seats
-        self.players = players
         self.small_blind = small_blind
         self.big_blind = big_blind
         self.buyin = buyin
@@ -30,36 +24,61 @@ class AbstractTable(ABC):
 
     @property
     def nplayers(self):
-        return len(self.players)
+        return self.seats.nFilled()
+
+    @property
+    def nseats(self):
+        return len(self.seats)
 
     def __repr__(self):
-        return f'Table({self.players})'
+        return f'Table({self.seats})'
 
-    def __bool__(self):
-        return 2 <= self.nplayers <= self.seats
+    def __bool__(self): # table is playable
+        return self.nplayers >= 2
 
     def __eq__(self, other):
         return self.id == other.id
 
     def __contains__(self, player):
-        return player in self.players
+        return player in self.seats
 
     def __getitem__(self, player_id):
-        for p in self.players:
+        for p in self.seats:
             if player_id == p.id: return p
         if self.round:
             return self.round[player_id]
 
     def __iter__(self):
-        return iter(self.players)
+        return iter(self.seats)
 
-    def __iadd__(self, players):
-        for player in players: self._addPlayer(player)
+    def __iadd__(self, player_or_player_with_index):
+        if isinstance(player_or_player_with_index, tuple):
+            player, index = player_or_player_with_index
+            self._addPlayerOnSeat(player, index)
+        else:
+            self._addPlayer(player_or_player_with_index)
         return self
 
-    def __isub__(self, players):
-        for player in players: self._removePlayer(player)
+    def __isub__(self, player):
+        self._removePlayer(player)
         return self
+
+    def _addPlayer(self, player):
+        seat_index = self.seats.append(player)
+        if seat_index is not None:
+            self.publicOut(
+                TablePublicOutId.PLAYERJOINED,
+                player_id = player.id,
+                player_seat = seat_index
+            )
+
+    def _addPlayerOnSeat(self, player, index):
+        if self.seats.seatPlayerAt(player, index):
+            self.publicOut(
+                TablePublicOutId.PLAYERJOINED,
+                player_id = player.id,
+                player_seat = index
+            )
 
     def _shiftButton(self):
         self.button = (self.button + 1) % self.nplayers
@@ -67,25 +86,18 @@ class AbstractTable(ABC):
     # kick out any player that has no money and
     # cannot get any from the current round played
     def _kickoutLosers(self):
-        for p in self.players:
+        for p in self.seats:
             if p.money == 0 and (p.stake == 0 or p.is_folded):
                 self._removePlayer(p)
 
-    def _addPlayer(self, player):
-        self.players.append(player)
-        self.publicOut(
-            self.PublicOutId.PLAYERJOINED,
-            player_id = player.id
-        )
-
     def _removePlayer(self, player):
-        self.players.remove([player])
+        self.seats.remove(player)
 
         # if player is inside an active round: forcefold
         if self.round and player in self.round:
             if player.id == self.round.current_player.id:
                 self.round.publicIn(
-                    player.id, RoundPublicInId.FOLD
+                    player.id, self.RoundClass.PublicInId.FOLD
                 )
             else:
                 player.is_folded = True
@@ -99,7 +111,7 @@ class AbstractTable(ABC):
     def _newRound(self, round_id):
         self.round = self.RoundClass(
             round_id,
-            shallowcopy(self.players),
+            self.seats.getPlayerGroup(),
             self.button,
             self.small_blind,
             self.big_blind
@@ -132,22 +144,23 @@ class AbstractTable(ABC):
 class ValidatedTable(AbstractTable):
 
     def __init__(
-        self, _id, seats, players,
+        self, _id, seats,
         buyin, small_blind, big_blind
     ):
-        player_sprite = type(players)([])
         super().__init__(
-            _id, seats, player_sprite,
+            _id, type(seats)([None] * len(seats)),
             buyin, small_blind, big_blind
         )
-        for player in players: self._addPlayer(player)
+        for seat in seats:
+            if seat is not None:
+                self._addPlayer(seat)
 
     def _addPlayer(self, player):
         self._kickoutLosers()
         if player.money < self.buyin: self.privateOut(
             player.id, self.PrivateOutId.BUYINTOOLOW,
             table_id=self.id)
-        elif self.nplayers >= self.seats: self.privateOut(
+        elif self.nplayers >= self.nseats: self.privateOut(
             player.id, self.PrivateOutId.TABLEFULL,
             table_id=self.id)
         elif player in self: self.privateOut(
@@ -178,20 +191,20 @@ class Table(ValidatedTable):
 
     def publicIn(self, player_id, action, **kwargs):
 
-        if action in RoundPublicInId:
+        if action in self.RoundClass.PublicInId:
             if not self.round: self.publicOut(
                 self.PublicOutId.ROUNDNOTINITIALIZED)
             else: self.round.publicIn(
-                player_id, action, kwargs.get('raise_by'))
+                player_id, action, **kwargs)
 
         elif action in self.PublicInId:
             if action is self.PublicInId.STARTROUND:
                 self._startRound(kwargs.get('round_id'))
             elif action is self.PublicInId.LEAVETABLE:
-                player = self.players.getPlayerById(player_id)
+                player = self.seats.getPlayerById(player_id)
                 self._removePlayer(player)
             elif action is self.PublicInId.BUYIN:
-                self += [kwargs['player']]
+                self._addPlayerOnSeat(kwargs['player'], kwargs['index'])
 
         # has to be done after every publicIn call
         self._forceOutRoundQueue()

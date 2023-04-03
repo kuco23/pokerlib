@@ -1,7 +1,7 @@
 from itertools import chain
 from enum import IntEnum
 
-from ..enums import RoundPublicOutId
+from ..enums import RoundPublicOutId, RoundPublicInId
 from .._round import Round
 from .._table import Table
 
@@ -13,7 +13,7 @@ def extendedEnum(original, extended):
 class RoundWithChoiceToShowCardsPublicInId(IntEnum):
     SHOWCARDS = 5
 RoundWithChoiceToShowCardsPublicInId = extendedEnum(
-    RoundPublicOutId, RoundWithChoiceToShowCardsPublicInId)
+    RoundPublicInId, RoundWithChoiceToShowCardsPublicInId)
 
 # extending RoundPublicOutId enum by
 class RoundWithChoiceToShowCardsPublicOutId(IntEnum):

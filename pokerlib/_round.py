@@ -4,7 +4,7 @@ from random import sample
 from collections import namedtuple, deque
 from abc import ABC
 
-from .enums import *
+from .enums import Rank, Suit, Turn, RoundPublicInId, RoundPrivateOutId, RoundPublicOutId
 from ._handparser import HandParser, HandParserGroup
 
 

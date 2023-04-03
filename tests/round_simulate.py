@@ -2,7 +2,7 @@ import sys
 sys.path.append('../pokerlib')
 
 from argparse import ArgumentParser
-from pokerlib import Player, PlayerGroup
+from pokerlib import Player, PlayerSeats
 from pokerlib import Table
 
 class MyTable(Table):
@@ -12,19 +12,15 @@ class MyTable(Table):
         print(_id, player, kwargs)
 
 def roundSimulation(nplayers, buyin, sb, bb):
-    players = PlayerGroup(map(
+    players = PlayerSeats(map(
         lambda i: Player(None, i, f"player{i}", buyin),
         range(nplayers)
     ))
-
-    table = MyTable(None, nplayers, players, buyin, sb, bb)
+    table = MyTable(None, players, buyin, sb, bb)
 
     while table:
         while table and not table.round:
-            table.publicIn(
-                table.players[0].id,
-                table.PublicInId.STARTROUND
-            )
+            table.publicIn(None, table.PublicInId.STARTROUND)
 
         player = table.round.current_player
         inp = input(f"require input from {player.id}: ")
