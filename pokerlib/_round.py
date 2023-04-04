@@ -71,7 +71,7 @@ class AbstractRound(ABC):
 
         next(self._turn_generator)
         self._dealBlinds()
-        self._processState()
+        self._postActionStateUpdate()
 
     def __repr__(self):
         return f'Round({self.players}, {self.board})'
@@ -261,7 +261,16 @@ class AbstractRound(ABC):
                         kickers = kickers
                     )
 
-    def _processState(self):
+    def _moveToNextPlayer(self):
+        self._shiftCurrentPlayer()
+        called = self.current_player.turn_stake[self.turn]
+        self.publicOut(
+            self.PublicOutId.PLAYERACTIONREQUIRED,
+            player_id = self.current_player.id,
+            to_call = self.turn_stake - called
+        )
+
+    def _postActionStateUpdate(self, is_update_after_forcefold=False):
         active = len(self.players.getActivePlayers())
         not_folded = len(self.players.getNotFoldedPlayers())
         pots_balanced = self._pots_balanced()
@@ -283,17 +292,15 @@ class AbstractRound(ABC):
                 self._dealWinnings()
                 return self._close()
             else:
-                self.current_index = self.button
                 next(self._turn_generator)
+                self.current_index = self.button
+                self._moveToNextPlayer()
 
-        self._shiftCurrentPlayer()
-        called = self.current_player.turn_stake[self.turn]
-
-        self.publicOut(
-            self.PublicOutId.PLAYERACTIONREQUIRED,
-            player_id = self.current_player.id,
-            to_call = self.turn_stake - called
-        )
+        # this function can be called after a non-current-player's
+        # hand is force-folded, in which case we don't want to move
+        # onto the next player
+        elif not is_update_after_forcefold:
+            self._moveToNextPlayer()
 
     def _fold(self):
         self.current_player.is_folded = True
@@ -351,7 +358,7 @@ class AbstractRound(ABC):
     def _processAction(self, action, raise_by=0):
         self._executeAction(action, raise_by)
         self.current_player.played_turn = True
-        self._processState()
+        self._postActionStateUpdate()
 
     def _close(self):
         self.finished = True

@@ -92,7 +92,6 @@ class AbstractTable(ABC):
 
     def _removePlayer(self, player):
         self.seats.remove(player)
-
         # if player is inside an active round: forcefold
         if self.round and player in self.round:
             if player.id == self.round.current_player.id:
@@ -101,8 +100,8 @@ class AbstractTable(ABC):
                 )
             else:
                 player.is_folded = True
-                self.round._processState()
-
+                self.round._postActionStateUpdate(True)
+        # notify that player was removed from table
         self.publicOut(
             self.PublicOutId.PLAYERREMOVED,
             player_id = player.id,
@@ -188,6 +187,12 @@ class Table(ValidatedTable):
             self.publicOut(msg.id, **msg.data)
         self.round.private_out_queue.clear()
         self.round.public_out_queue.clear()
+
+    # round outs can happen only when players are removed,
+    # never when players are added!
+    def _removePlayer(self, player):
+        super()._removePlayer(player)
+        self._forceOutRoundQueue()
 
     def publicIn(self, player_id, action, **kwargs):
 
