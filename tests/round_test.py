@@ -51,11 +51,11 @@ assert kwargs['board'] == []
 _id, kwargs = small_blind
 assert _id is table.round.PublicOutId.SMALLBLIND
 assert kwargs['small_blind'] == 5
-assert kwargs['turn_stake'] == 5
+assert kwargs['paid_amount'] == 5
 _id, kwargs = big_blind
 assert _id is table.round.PublicOutId.BIGBLIND
 assert kwargs['big_blind'] == 10
-assert kwargs['turn_stake'] == 10
+assert kwargs['paid_amount'] == 10
 _id, kwargs = required_call
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
 assert kwargs['to_call'] == 5
@@ -64,9 +64,11 @@ assert kwargs['to_call'] == 5
 called, required_check = table.publicIn(player1.id, table.round.PublicInId.CALL)
 _id, kwargs = called
 assert _id is table.round.PublicOutId.PLAYERCALL
-assert kwargs['called'] == 5
+assert kwargs['player_id'] == player1.id
+assert kwargs['paid_amount'] == 5
 _id, kwargs = required_check
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
+assert kwargs['player_id'] == player2.id
 assert kwargs['to_call'] == 0
 
 # check from the big-blind player, expect new turn
@@ -80,30 +82,35 @@ assert len(kwargs['board']) == 3
 _id, kwargs = required_check
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
 assert kwargs['to_call'] == 0
+assert kwargs['player_id'] == player1.id
 
 # check from the small-blind player
 checked, required_check = table.publicIn(player1.id, table.round.PublicInId.CHECK)
 _id, kwargs = checked
 assert _id is table.round.PublicOutId.PLAYERCHECK
-_id, kwargs = turn_flop
+assert kwargs['player_id'] == player1.id
 _id, kwargs = required_check
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
 assert kwargs['to_call'] == 0
+assert kwargs['player_id'] == player2.id
 
 # player raises
 raised, required_call = table.publicIn(player2.id, table.round.PublicInId.RAISE, raise_by=50)
 _id, kwargs = raised
 assert _id is table.round.PublicOutId.PLAYERRAISE
 assert kwargs['raised_by'] == 50
+assert kwargs['player_id'] == player2.id
 _id, kwargs = required_call
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
 assert kwargs['to_call'] == 50
+assert kwargs['player_id'] == player1.id
 
 # player calls, expect new turn
 called, turn_turn, required_check = table.publicIn(player1.id, table.round.PublicInId.CALL)
 _id, kwargs = called
 assert _id is table.round.PublicOutId.PLAYERCALL
-assert kwargs['called'] == 50
+assert kwargs['paid_amount'] == 50
+assert kwargs['player_id'] == player1.id
 _id, kwargs = turn_turn
 assert _id is table.round.PublicOutId.NEWTURN
 assert kwargs['turn'] == Turn.TURN
@@ -111,19 +118,23 @@ assert len(kwargs['board']) == 4
 _id, kwargs = required_check
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
 assert kwargs['to_call'] == 0
+assert kwargs['player_id'] == player1.id
 
 # player checks
 check, required_check = table.publicIn(player1.id, table.round.PublicInId.CHECK)
 _id, kwargs = check
 assert _id is table.round.PublicOutId.PLAYERCHECK
+assert kwargs['player_id'] == player1.id
 _id, kwargs = required_check
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
 assert kwargs['to_call'] == 0
+assert kwargs['player_id'] == player2.id
 
 # player checks
 check, turn_river, required_check = table.publicIn(player2.id, table.round.PublicInId.CHECK)
 _id, kwargs = check
 assert _id is table.round.PublicOutId.PLAYERCHECK
+assert kwargs['player_id'] == player2.id
 _id, kwargs = turn_river
 assert _id is table.round.PublicOutId.NEWTURN
 assert kwargs['turn'] == Turn.RIVER
@@ -131,25 +142,32 @@ assert len(kwargs['board']) == 5
 _id, kwargs = required_check
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
 assert kwargs['to_call'] == 0
+assert kwargs['player_id'] == player1.id
 
 # player moves all in
-allin, required_call = table.publicIn(player1.id, table.round.PublicInId.ALLIN)
-_id, kwargs = allin
-assert _id is table.round.PublicOutId.PLAYERALLIN
+isallin, wentallin, required_call = table.publicIn(player1.id, table.round.PublicInId.ALLIN)
+_id, kwargs = isallin
+assert _id is table.round.PublicOutId.PLAYERISALLIN
+assert kwargs['player_id'] == player1.id
 assert kwargs['all_in_stake'] == 940
+_id, kwargs = wentallin
+assert _id is table.round.PublicOutId.PLAYERWENTALLIN
+assert kwargs['player_id'] == player1.id
+assert kwargs['paid_amount'] == 940
 _id, kwargs = required_call
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
 assert kwargs['to_call'] == 940
 
 # player calls, expect game resolution
 response = table.publicIn(player2.id, table.round.PublicInId.CALL)
-allin, called, show_cards1, show_cards2, declare_winner, *_non_determinstic = response
-_id, kwargs = allin
-assert _id is table.round.PublicOutId.PLAYERALLIN
+isallin, called, show_cards1, show_cards2, declare_winner, *_non_determinstic = response
+_id, kwargs = isallin
+assert _id is table.round.PublicOutId.PLAYERISALLIN
+assert kwargs['player_id'] == player2.id
 assert kwargs['all_in_stake'] == 940
 _id, kwargs = called
 assert _id is table.round.PublicOutId.PLAYERCALL
-assert kwargs['called'] == 940
+assert kwargs['paid_amount'] == 940
 _id, kwargs = show_cards1
 assert _id is table.round.PublicOutId.PUBLICCARDSHOW
 assert len(kwargs['cards']) == 2

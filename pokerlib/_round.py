@@ -158,6 +158,7 @@ class AbstractRound(ABC):
             player.money -= money
             player.turn_stake[self.turn] += money
             player.stake += money
+            return money
         else:
             all_in_stake = player.money
             player.turn_stake[self.turn] += all_in_stake
@@ -166,29 +167,28 @@ class AbstractRound(ABC):
             player.is_all_in = True
 
             self.publicOut(
-                self.PublicOutId.PLAYERALLIN,
+                self.PublicOutId.PLAYERISALLIN,
                 player_id = player.id,
                 all_in_stake = all_in_stake
             )
+            return all_in_stake
 
     def _dealBlinds(self):
         i = self.current_index
 
         previous_player = self.players.previousActivePlayer(i)
-        self._addToPot(previous_player, self.small_blind)
-
+        paid_amount = self._addToPot(previous_player, self.small_blind)
         self.publicOut(
             self.PublicOutId.SMALLBLIND,
             player_id = previous_player.id,
-            turn_stake = previous_player.turn_stake[0]
+            paid_amount = paid_amount
         )
 
-        self._addToPot(self.current_player, self.big_blind)
-
+        paid_amount = self._addToPot(self.current_player, self.big_blind)
         self.publicOut(
             self.PublicOutId.BIGBLIND,
             player_id = self.current_player.id,
-            turn_stake = self.current_player.turn_stake[0]
+            paid_amount = paid_amount
         )
 
     def _dealPrematureWinnings(self):
@@ -310,25 +310,31 @@ class AbstractRound(ABC):
 
     def _call(self):
         to_call = self.to_call
-        self._addToPot(self.current_player, to_call)
+        paid_amount = self._addToPot(self.current_player, to_call)
         self.publicOut(
             self.PublicOutId.PLAYERCALL,
             player_id = self.current_player.id,
-            called = to_call
+            paid_amount = paid_amount
         )
 
     def _raise(self, raise_by):
-        to_call= self.to_call
-        self._addToPot(self.current_player, to_call + raise_by)
+        to_call = self.to_call
+        paid_amount = self._addToPot(self.current_player, to_call + raise_by)
         self.publicOut(
             self.PublicOutId.PLAYERRAISE,
             player_id = self.current_player.id,
-            raised_by = raise_by
+            raised_by = raise_by,
+            paid_amount = paid_amount
         )
 
     def _allin(self):
         cp = self.current_player
-        self._addToPot(cp, cp.money)
+        paid_amount = self._addToPot(cp, cp.money)
+        self.publicOut(
+            self.PublicOutId.PLAYERWENTALLIN,
+            player_id = self.current_player.id,
+            paid_amount = paid_amount
+        )
 
     def _executeAction(self, action, raise_by):
         if action is self.PublicInId.FOLD:
