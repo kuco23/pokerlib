@@ -294,7 +294,7 @@ class AbstractRound(ABC):
             else:
                 next(self._turn_generator)
                 self.current_index = self.button
-                self._moveToNextPlayer()
+                return self._moveToNextPlayer()
 
         # this function can be called after a non-current-player's
         # hand is force-folded, in which case we don't want to move

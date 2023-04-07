@@ -11,14 +11,14 @@ def extendedEnum(original, extended):
 
 # extending RoundPublicInId enum by
 class RoundWithChoiceToShowCardsPublicInId(IntEnum):
-    SHOWCARDS = 5
+    SHOWCARDS = len(RoundPublicInId) # 5
 RoundWithChoiceToShowCardsPublicInId = extendedEnum(
     RoundPublicInId, RoundWithChoiceToShowCardsPublicInId)
 
 # extending RoundPublicOutId enum by
 class RoundWithChoiceToShowCardsPublicOutId(IntEnum):
-    PLAYERCHOICEREQUIRED = 14
-    PLAYERREVEALCARDS = 15
+    PLAYERCHOICEREQUIRED = len(RoundPublicOutId) # 15
+    PLAYERREVEALCARDS = len(RoundPublicOutId) + 1 # 16
 RoundWithChoiceToShowCardsPublicOutId = extendedEnum(
     RoundPublicOutId, RoundWithChoiceToShowCardsPublicOutId)
 
@@ -55,7 +55,7 @@ class RoundWithChoiceToShowCards(Round):
     def publicIn(self, player_id, action, raise_by=0, show_cards=False):
         # process all the standard inputs
         super().publicIn(player_id, action, raise_by)
-        # add card reveal options (note that caller does not have to be current winner)
+        # add card reveal options (note that caller has to be current winner)
         if (
             action is self.PublicInId.SHOWCARDS and
             self._premature_winner_id is not None and self._premature_winner_id == player_id
