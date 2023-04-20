@@ -50,6 +50,20 @@ class PlayerGroup(list):
     def __add__(self, other):
         return type(self)(super().__add__(other))
 
+    def countActivePlayers(self):
+        counter = 0
+        for player in self:
+            if player.is_active:
+                counter += 1
+        return counter
+
+    def countUnfoldedPlayers(self):
+        counter = 0
+        for player in self:
+            if not player.is_folded:
+                counter += 1
+        return counter
+
     def getPlayerById(self, _id):
         for player in self:
             if player.id == _id:

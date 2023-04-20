@@ -49,7 +49,7 @@ class AbstractRound(ABC):
 
         self.players = players
         self.button = button
-        self.current_index = button
+        self.current_index = self.button # it will move
 
         self.board = list()
         self.turn = None
@@ -75,11 +75,16 @@ class AbstractRound(ABC):
     @property
     def starting_player_index(self):
         return self.players.nextUnfoldedIndex(self.button)
-
     @property
     def last_aggressor_index(self):
         return self.players.previousUnfoldedIndex(
             self.current_index)
+    @property
+    def small_blind_player_index(self):
+        return self.button - 2 if len(self.players) > 2 else self.button - 1
+    @property
+    def big_blind_player_index(self):
+        return self.button - 1 if len(self.players) > 2 else self.button
 
     @property
     def current_player(self):
@@ -165,24 +170,6 @@ class AbstractRound(ABC):
             )
             return all_in_stake
 
-    def _dealBlinds(self):
-        i = self.current_index
-
-        previous_player = self.players.previousActivePlayer(i)
-        paid_amount = self._addToPot(previous_player, self.small_blind)
-        self.publicOut(
-            self.PublicOutId.SMALLBLIND,
-            player_id = previous_player.id,
-            paid_amount = paid_amount
-        )
-
-        paid_amount = self._addToPot(self.current_player, self.big_blind)
-        self.publicOut(
-            self.PublicOutId.BIGBLIND,
-            player_id = self.current_player.id,
-            paid_amount = paid_amount
-        )
-
     def _startRound(self):
         self.publicOut(self.PublicOutId.NEWROUND)
 
@@ -197,8 +184,27 @@ class AbstractRound(ABC):
             )
 
         next(self._turn_generator)
-        self._dealBlinds()
+        self._dealSmallBlind()
+        self._dealBigBlind()
         self._postActionStateUpdate()
+
+    def _dealSmallBlind(self):
+        small_blind_player = self.players[self.small_blind_player_index]
+        paid_amount = self._addToPot(small_blind_player, self.small_blind)
+        self.publicOut(
+            self.PublicOutId.SMALLBLIND,
+            player_id = small_blind_player.id,
+            paid_amount = paid_amount
+        )
+
+    def _dealBigBlind(self):
+        big_blind_player = self.players[self.big_blind_player_index]
+        paid_amount = self._addToPot(big_blind_player, self.big_blind)
+        self.publicOut(
+            self.PublicOutId.BIGBLIND,
+            player_id = big_blind_player.id,
+            paid_amount = paid_amount
+        )
 
     def _dealPrematureWinnings(self):
         winner, = self.players.getNotFoldedPlayers()
@@ -300,12 +306,12 @@ class AbstractRound(ABC):
         )
 
     def _postActionStateUpdate(self, is_update_after_forcefold=False):
-        active = len(self.players.getActivePlayers())
-        not_folded = len(self.players.getNotFoldedPlayers())
+        active = self.players.countActivePlayers()
+        not_folded = self.players.countUnfoldedPlayers()
         pots_balanced = self._potsBalanced()
 
         if not_folded == 0:
-            return self._finish()
+            return self._close()
 
         elif not_folded == 1:
             self._dealPrematureWinnings()

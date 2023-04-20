@@ -50,14 +50,17 @@ assert kwargs['turn'] is Turn.PREFLOP
 assert kwargs['board'] == []
 _id, kwargs = small_blind
 assert _id is table.round.PublicOutId.SMALLBLIND
+assert kwargs['player_id'] == player1.id
 assert kwargs['small_blind'] == 5
 assert kwargs['paid_amount'] == 5
 _id, kwargs = big_blind
 assert _id is table.round.PublicOutId.BIGBLIND
+assert kwargs['player_id'] == player2.id
 assert kwargs['big_blind'] == 10
 assert kwargs['paid_amount'] == 10
 _id, kwargs = required_call
 assert _id is table.round.PublicOutId.PLAYERACTIONREQUIRED
+assert kwargs['player_id'] == player1.id
 assert kwargs['to_call'] == 5
 
 # call big blind, action required is check/raise from big-blind player
