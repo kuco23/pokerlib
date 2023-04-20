@@ -1,2 +1,2 @@
-from ._table_with_choice_to_show_cards import (
-    RoundWithChoiceToShowCards, TableWithChoiceToShowCards)
+from ._no_muck_table import NoMuckRound, NoMuckTable
+from ._no_muck_showdown_table import NoMuckRound, NoMuckShowdownTable

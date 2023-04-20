@@ -1,3 +1,5 @@
+from operator import add
+
 class Player:
 
     def __init__(self, table_id, _id, name, money):
@@ -5,15 +7,13 @@ class Player:
         self.id = _id
         self.name = name
         self.money = money
-
         self.cards = tuple()
         self.hand = None
+        self.group_kickers = None
         self.is_folded = False
         self.is_all_in = False
-
         self.stake = 0
         self.turn_stake = [0, 0, 0, 0]
-
         self.played_turn = False
 
     @property
@@ -32,6 +32,7 @@ class Player:
     def resetState(self):
         self.cards = tuple()
         self.hand = None
+        self.group_kickers = None
         self.is_folded = False
         self.is_all_in = False
         self.stake = 0
@@ -42,9 +43,9 @@ class Player:
 class PlayerGroup(list):
 
     def __getitem__(self, i):
-        ret = super().__getitem__(i)
-        isl = isinstance(ret, list)
-        return type(self)(ret) if isl else ret
+        is_slice = isinstance(i, slice)
+        ret = super().__getitem__(i if is_slice else i % len(self))
+        return type(self)(ret) if is_slice else ret
 
     def __add__(self, other):
         return type(self)(super().__add__(other))
@@ -74,6 +75,18 @@ class PlayerGroup(list):
         for k in map(lambda j: j % n, rn):
             if self[k].is_active: return k
 
+    def nextUnfoldedIndex(self, i):
+        n = len(self)
+        rn = range(i + 1, i + n)
+        for k in map(lambda j: j % n, rn):
+            if not self[k].is_folded: return k
+
+    def previousUnfoldedIndex(self, i):
+        n = len(self)
+        rn = reversed(range(i + 1, i + n))
+        for k in map(lambda j: j % n, rn):
+            if not self[k].is_folded: return k
+
     def getActivePlayers(self):
         return type(self)(filter(
             lambda player: player.is_active,
@@ -97,6 +110,18 @@ class PlayerGroup(list):
         return type(self)(
             [player for player in self if player.hand == winner.hand]
         )
+
+    def sortedByWinningAmountProspect(self):
+        return type(self)(add(
+            sorted(
+                [player for player in self if player.is_all_in],
+                key = lambda player: player.stake
+            ),
+            sorted(
+                [player for player in self if player.is_active],
+                key = lambda player: player.stake
+            )
+        ))
 
 
 class PlayerSeats(list):

@@ -19,20 +19,23 @@ def roundSimulation(nplayers, buyin, sb, bb):
     table = MyTable(None, players, buyin, sb, bb)
 
     while table:
+        if not table: break # only one player left
         while table and not table.round:
             table.publicIn(None, table.PublicInId.STARTROUND)
 
-        player = table.round.current_player
-        inp = input(f"require input from {player.id}: ")
+        if table.round.finished:
+            player_idx = table.round._muck_optioned_player_ids[0]
+            player = table.round.players[player_idx]
+        else:
+            player = table.round.current_player
 
+        inp = input(f"require input from {player.id}: ")
         if inp in table.round.PublicInId.__members__:
             action, raise_by = table.round.PublicInId.__members__[inp], 0
         elif inp.startswith(table.round.PublicInId.RAISE.name):
             raise_by = int(inp.split()[1])
             action, raise_by = table.round.PublicInId.RAISE, raise_by
-        else:
-            continue
-
+        else: continue
         table.publicIn(player.id, action, raise_by=raise_by)
 
 

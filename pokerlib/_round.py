@@ -1,4 +1,3 @@
-from operator import add
 from math import inf
 from random import sample
 from collections import namedtuple, deque
@@ -43,6 +42,7 @@ class AbstractRound(ABC):
     def __init__(self, _id, players, button, small_blind, big_blind):
         self.id = _id
         self.finished = False
+        self.closed = False
 
         self.small_blind = small_blind
         self.big_blind = big_blind
@@ -56,34 +56,30 @@ class AbstractRound(ABC):
 
         self._deck = self._deckIterator()
         self._turn_generator = self._turnGenerator()
+        self._muck_optioned_player_ids = []
 
-        self.publicOut(self.PublicOutId.NEWROUND)
-
-        for player in self.players:
-            player.resetState()
-            player.cards = (next(self._deck), next(self._deck))
-            player.hand = HandParser(list(player.cards))
-
-            self.privateOut(
-                player.id,
-                self.PrivateOutId.DEALTCARDS
-            )
-
-        next(self._turn_generator)
-        self._dealBlinds()
-        self._postActionStateUpdate()
+        self._startRound()
 
     def __repr__(self):
         return f'Round({self.players}, {self.board})'
 
     def __bool__(self):
-        return not self.finished
+        return not self.closed
 
     def __contains__(self, player):
         return player in self.players
 
     def __getitem__(self, _id):
         return self.players.getPlayerById(_id)
+
+    @property
+    def starting_player_index(self):
+        return self.players.nextUnfoldedIndex(self.button)
+
+    @property
+    def last_aggressor_index(self):
+        return self.players.previousUnfoldedIndex(
+            self.current_index)
 
     @property
     def current_player(self):
@@ -131,11 +127,7 @@ class AbstractRound(ABC):
 
             yield
 
-    def _shiftCurrentPlayer(self):
-        i = self.current_index
-        self.current_index = self.players.nextActiveIndex(i)
-
-    def _pots_balanced(self):
+    def _potsBalanced(self):
         active_pots = [
             player.turn_stake[self.turn]
             for player in self.players
@@ -191,6 +183,23 @@ class AbstractRound(ABC):
             paid_amount = paid_amount
         )
 
+    def _startRound(self):
+        self.publicOut(self.PublicOutId.NEWROUND)
+
+        for player in self.players:
+            player.resetState()
+            player.cards = (next(self._deck), next(self._deck))
+            player.hand = HandParser(list(player.cards))
+
+            self.privateOut(
+                player.id,
+                self.PrivateOutId.DEALTCARDS
+            )
+
+        next(self._turn_generator)
+        self._dealBlinds()
+        self._postActionStateUpdate()
+
     def _dealPrematureWinnings(self):
         winner, = self.players.getNotFoldedPlayers()
         won = sum(self.pot_size)
@@ -202,23 +211,15 @@ class AbstractRound(ABC):
             money_won = won,
         )
 
-    def _dealWinnings(self):
-        stake_sorted = type(self.players)(add(
-            sorted(
-                [player for player in self.players if player.is_all_in],
-                key = lambda player: player.stake
-            ),
-            sorted(
-                [player for player in self.players if player.is_active],
-                key = lambda player: player.stake
-            )
-        ))
+        self._muck_optioned_player_ids.append(winner.id)
 
-        for competitor in stake_sorted:
-            self.publicOut(
-                self.PublicOutId.PUBLICCARDSHOW,
-                player_id = competitor.id
-            )
+        self.publicOut(
+            self.PublicOutId.PLAYERCHOICEREQUIRED,
+            player_id = winner.id
+        )
+
+    def _dealWinnings(self):
+        stake_sorted = self.players.sortedByWinningAmountProspect()
 
         grouped_indexes = [0]
         for i in range(1, len(stake_sorted)):
@@ -253,13 +254,41 @@ class AbstractRound(ABC):
 
                 if round(win_took):
                     win_split.money += round(win_took)
+                    win_split.group_kickers = kickers
 
                     self.publicOut(
                         self.PublicOutId.DECLAREFINISHEDWINNER,
                         player_id = win_split.id,
-                        money_won = round(win_took),
-                        kickers = kickers
+                        money_won = round(win_took)
                     )
+
+        self._showdown()
+
+    def _showdown(self):
+        showdown_initiator_index = self.last_aggressor_index \
+            if self.turn_stake > 0 else self.starting_player_index
+        current_best_hand = self.players[showdown_initiator_index].hand
+        for i in range(len(self.players)):
+            player = self.players[showdown_initiator_index + i]
+            if player.is_folded: continue
+            if i == 0 or player.hand >= current_best_hand:
+                current_best_hand = player.hand
+                self.publicOut(
+                    self.PublicOutId.PUBLICCARDSHOW,
+                    player_id = player.id,
+                    cards = player.cards,
+                    kickers = player.group_kickers
+                )
+            else:
+                self._muck_optioned_player_ids.append(player.id)
+                self.publicOut(
+                    self.PublicOutId.PLAYERCHOICEREQUIRED,
+                    player_id = player.id,
+                )
+
+    def _shiftCurrentPlayer(self):
+        self.current_index = self.players.nextActiveIndex(
+            self.current_index)
 
     def _moveToNextPlayer(self):
         self._shiftCurrentPlayer()
@@ -273,24 +302,24 @@ class AbstractRound(ABC):
     def _postActionStateUpdate(self, is_update_after_forcefold=False):
         active = len(self.players.getActivePlayers())
         not_folded = len(self.players.getNotFoldedPlayers())
-        pots_balanced = self._pots_balanced()
+        pots_balanced = self._potsBalanced()
 
         if not_folded == 0:
-            return self._close()
+            return self._finish()
 
         elif not_folded == 1:
             self._dealPrematureWinnings()
-            return self._close()
+            return self._finish()
 
         elif active <= 1 and pots_balanced:
             for _ in self._turn_generator: pass
             self._dealWinnings()
-            return self._close()
+            return self._finish()
 
         elif self.players.allPlayedTurn() and pots_balanced:
             if self.turn == Turn.RIVER:
                 self._dealWinnings()
-                return self._close()
+                return self._finish()
             else:
                 next(self._turn_generator)
                 self.current_index = self.button
@@ -343,6 +372,22 @@ class AbstractRound(ABC):
             paid_amount = paid_amount
         )
 
+    def _show(self, player_id):
+        self._muck_optioned_player_ids.remove(player_id)
+        player = self.players.getPlayerById(player_id)
+        self.publicOut(
+            self.PublicOutId.PLAYERREVEALCARDS,
+            player_id = player_id,
+            cards = player.cards
+        )
+
+    def _muck(self, player_id):
+        self._muck_optioned_player_ids.remove(player_id)
+        self.publicOut(
+            self.PublicOutId.PLAYERMUCKCARDS,
+            player_id = player_id
+        )
+
     def _executeAction(self, action, raise_by):
         if action is self.PublicInId.FOLD:
             self._fold()
@@ -355,14 +400,26 @@ class AbstractRound(ABC):
         elif action is self.PublicInId.ALLIN:
             self._allin()
 
+    def _executeChoice(self, choice, player_id):
+        if choice is self.PublicInId.SHOW:
+            self._show(player_id)
+        elif choice is self.PublicInId.MUCK:
+            self._muck(player_id)
+        if self._muck_optioned_player_ids == []:
+            self._close()
+
     def _processAction(self, action, raise_by=0):
         self._executeAction(action, raise_by)
         self.current_player.played_turn = True
         self._postActionStateUpdate()
 
-    def _close(self):
+    def _finish(self):
         self.finished = True
         self.publicOut(self.PublicOutId.ROUNDFINISHED)
+
+    def _close(self):
+        self.closed = True
+        self.publicOut(self.PublicOutId.ROUNDCLOSED)
 
     def publicIn(self, player_id, action, **kwargs):
         """Processes invalidated user input"""
@@ -387,21 +444,25 @@ class Round(AbstractRound):
         super().__init__(*args)
 
     def publicIn(self, player_id, action, raise_by=0):
-        # public in must come from current player
-        player = self.current_player
-        if player_id != player.id: return
-
-        to_call = self.turn_stake - player.turn_stake[self.turn]
-        if action is self.PublicInId.CHECK and to_call == 0:
-            self._processAction(self.PublicInId.CHECK)
-        elif action is self.PublicInId.RAISE:
-           if to_call < player.money:
-                self._processAction(self.PublicInId.RAISE, raise_by)
+        if action is self.PublicInId.SHOW or action is self.PublicInId.MUCK:
+            if player_id in self._muck_optioned_player_ids:
+                self._executeChoice(action, player_id)
         elif (
+            action is self.PublicInId.CHECK or
             action is self.PublicInId.CALL or
+            action is self.PublicInId.FOLD or
             action is self.PublicInId.ALLIN or
-            action is self.PublicInId.FOLD
-        ): self._processAction(action, raise_by)
+            action is self.PublicInId.RAISE
+        ):
+            player = self.current_player
+            if player_id != player.id: return
+            to_call = self.turn_stake - player.turn_stake[self.turn]
+            if action is self.PublicInId.CHECK and to_call == 0:
+                self._processAction(self.PublicInId.CHECK)
+            elif action is self.PublicInId.RAISE:
+                if to_call < player.money:
+                    self._processAction(self.PublicInId.RAISE, raise_by)
+            else: self._processAction(action, raise_by)
 
     def privateOut(self, player_id, out_id, **kwargs):
         """Player out implementation"""

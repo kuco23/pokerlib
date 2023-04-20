@@ -160,7 +160,7 @@ assert kwargs['to_call'] == 940
 
 # player calls, expect game resolution
 response = table.publicIn(player2.id, table.round.PublicInId.CALL)
-isallin, called, show_cards1, show_cards2, declare_winner, *_non_determinstic = response
+isallin, called, *_non_determinstic = response
 _id, kwargs = isallin
 assert _id is table.round.PublicOutId.PLAYERISALLIN
 assert kwargs['player_id'] == player2.id
@@ -168,11 +168,3 @@ assert kwargs['all_in_stake'] == 940
 _id, kwargs = called
 assert _id is table.round.PublicOutId.PLAYERCALL
 assert kwargs['paid_amount'] == 940
-_id, kwargs = show_cards1
-assert _id is table.round.PublicOutId.PUBLICCARDSHOW
-assert len(kwargs['cards']) == 2
-_id, kwargs = show_cards2
-assert _id is table.round.PublicOutId.PUBLICCARDSHOW
-assert len(kwargs['cards']) == 2
-_id, kwargs = declare_winner
-assert _id is table.round.PublicOutId.DECLAREFINISHEDWINNER

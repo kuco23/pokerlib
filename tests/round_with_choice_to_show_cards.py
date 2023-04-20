@@ -1,10 +1,9 @@
 import sys
 sys.path.append('../pokerlib')
 from copy import deepcopy
-from pokerlib import Player, PlayerSeats
-from pokerlib.implementations import TableWithChoiceToShowCards
+from pokerlib import Player, PlayerSeats, Table
 
-class OutReturnTable(TableWithChoiceToShowCards):
+class OutReturnTable(Table):
     cachedOutput = []
     def publicIn(self, player_id, action, **kwargs):
         super().publicIn(player_id, action, **kwargs)
@@ -26,4 +25,4 @@ table.publicIn(player1.id, table.round.PublicInId.CALL)
 table.publicIn(player2.id, table.round.PublicInId.CALL)
 table.publicIn(player1.id, table.round.PublicInId.ALLIN)
 table.publicIn(player2.id, table.round.PublicInId.FOLD)
-table.publicIn(player1.id, table.round.PublicInId.SHOWCARDS, show_cards=True)
+table.publicIn(player1.id, table.round.PublicInId.SHOW)

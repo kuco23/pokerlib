@@ -3,9 +3,8 @@ sys.path.append('../pokerlib')
 
 import pokerlib
 from pokerlib import enums
-from pokerlib.implementations import TableWithChoiceToShowCards
 
-class MyTable(TableWithChoiceToShowCards):
+class MyTable(pokerlib.Table):
     def publicOut(self, out_id, **kwargs):
         print('table', out_id.name)
         if 'hand' in kwargs:

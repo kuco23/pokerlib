@@ -106,6 +106,12 @@ class HandParser:
             if s_val != o_val: return s_val < o_val
         return False
 
+    def __ge__(self, other):
+        return not self < other
+
+    def __le__(self, other):
+        return not other > self
+
     def __iadd__(self, cards):
         if len(cards) > 0:
             self._addCards(cards)
