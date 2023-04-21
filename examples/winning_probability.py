@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../pokerlib')
+
 from random import sample
 from itertools import product
 from pokerlib import HandParser

@@ -139,34 +139,9 @@ table.publicIn(player2.id, RoundPublicInId.CALL)
 
 Wrong inputs are mostly ignored, though they can produce a response, when it seems useful. As noted before, when providing input, the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`) along with additional data that depends on the output id. For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
 
-A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). A simple command line game, where you respond by enum names, can be implemented as below (for working version check `tests/round_test.py`).
+A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). A simple command line game, where you respond by enum names, can be implemented simply as in `examples/round_simulate.py`.
 
-```python
-# define a table with fixed players as before
-table = ...
-while table:
-    while table and not table.round:
-        table.publicIn(
-            table.players[0].id,
-            TablePublicInId.STARTROUND
-        )
-
-    player = table.round.current_player
-    inp = input(f"require input from {player.id}: ")
-
-    if inp in RoundPublicInId.__members__:
-        action, raise_by = RoundPublicInId.__members__[inp], 0
-    elif inp.startswith(RoundPublicInId.RAISE.name):
-        raise_by = int(inp.split()[1])
-        action = RoundPublicInId.RAISE
-    else:
-        continue
-
-    table.publicIn(player.id, action, raise_by=raise_by)
-```
-
-Note that you can define your own IO identifiers for a generalized game,
-as shown in one example [here](https://github.com/kuco23/pokerlib/blob/master/pokerlib/implementations/_table_with_choice_to_show_cards.py).
+The library is highly customizable, allowing you to override specific class methods such as [`_showdown`](https://github.com/kuco23/pokerlib/blob/master/pokerlib/implementations/_table_with_choice_to_show_cards.py) that let you define the way that cards get shown. The IO identifiers can also be extended or reduced and set either as `Table` or `Round` class attributes.
 
 ## Tests
 Basic tests for this library are included. You can test HandParser by running
