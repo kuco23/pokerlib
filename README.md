@@ -141,7 +141,7 @@ Wrong inputs are mostly ignored, though they can produce a response, when it see
 
 A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). A simple command line game, where you respond by enum names, can be implemented simply as in `examples/round_simulate.py`.
 
-The library is highly customizable, allowing you to override specific class methods such as [`_showdown`](https://github.com/kuco23/pokerlib/blob/master/pokerlib/implementations/_table_with_choice_to_show_cards.py) that let you define the way that cards get shown. The IO identifiers can also be extended or reduced and set either as `Table` or `Round` class attributes.
+The library is highly customizable, allowing you to override specific class methods such as `_showdown` that let you define the way that cards get shown (see `pokerlib/implementations/_no_muck_showdown_table.py`). The IO identifiers can also be extended or reduced and set either as `Table` or `Round` class attributes.
 
 ## Tests
 Basic tests for this library are included. You can test HandParser by running
