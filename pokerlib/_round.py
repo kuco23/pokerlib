@@ -49,7 +49,7 @@ class AbstractRound(ABC):
 
         self.players = players
         self.button = button
-        self.current_index = self.button # it will move
+        self.current_index = button # it will move
 
         self.board = list()
         self.turn = None
