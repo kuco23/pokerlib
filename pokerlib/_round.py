@@ -450,10 +450,12 @@ class Round(AbstractRound):
         super().__init__(*args)
 
     def publicIn(self, player_id, action, raise_by=0):
-        if action is self.PublicInId.SHOW or action is self.PublicInId.MUCK:
-            if player_id in self._muck_optioned_player_ids:
-                self._executeChoice(action, player_id)
-        elif (
+        if self.closed: return # can't do anything if round is closed
+        if self.finished: # if round is finished, only show/muck is allowed
+            if action is self.PublicInId.SHOW or action is self.PublicInId.MUCK:
+                if player_id in self._muck_optioned_player_ids:
+                    self._executeChoice(action, player_id)
+        elif ( # if round is not finished, only valid actions are allowed
             action is self.PublicInId.CHECK or
             action is self.PublicInId.CALL or
             action is self.PublicInId.FOLD or
