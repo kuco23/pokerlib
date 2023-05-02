@@ -1,8 +1,7 @@
 from .._round import Round
 from .._table import Table
 
-
-class NoMuckShowdownTable(Round):
+class NoMuckShowdownRound(Round):
     def _showdown(self):
         for player in self.players:
             if not player.is_folded: self.publicOut(
@@ -13,4 +12,4 @@ class NoMuckShowdownTable(Round):
             )
 
 class NoMuckShowdownTable(Table):
-    RoundClass = NoMuckShowdownTable
+    RoundClass = NoMuckShowdownRound
