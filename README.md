@@ -16,24 +16,24 @@ This module takes care of hand parsing. A hand usually consists of 2 dealt cards
 
 ```python
 from pokerlib import HandParser
-from pokerib.enums import Rank, Suit
+from pokerib.enums import Value, Suit
 
 hand1 = HandParser([
-    (Rank.KING, Suit.SPADE),
-    (Rank.ACE, Suit.SPADE)
+    (Value.KING, Suit.SPADE),
+    (Value.ACE, Suit.SPADE)
 ])
 
 hand2 = HandParser([
-    (Rank.NINE, Suit.SPADE),
-    (Rank.TWO, Suit.CLUB)
+    (Value.NINE, Suit.SPADE),
+    (Value.TWO, Suit.CLUB)
 ])
 
 board = [
-    (Rank.EIGHT, Suit.SPADE),
-    (Rank.TEN, Suit.SPADE),
-    (Rank.JACK, Suit.SPADE),
-    (Rank.QUEEN, Suit.SPADE),
-    (Rank.TWO, Suit.HEART)
+    (Value.EIGHT, Suit.SPADE),
+    (Value.TEN, Suit.SPADE),
+    (Value.JACK, Suit.SPADE),
+    (Value.QUEEN, Suit.SPADE),
+    (Value.TWO, Suit.HEART)
 ]
 
 # add new cards to each hand
@@ -52,20 +52,20 @@ It is also possible to fetch hand's kickers.
 
 ```python
 hand = HandParser([
-    (Rank.TWO, Suit.DIAMOND),
-    (Rank.ACE, Suit.CLUB),
-    (Rank.TWO, Suit.SPADE),
-    (Rank.THREE, Suit.DIAMOND),
-    (Rank.TEN, Suit.HEART),
-    (Rank.SIX, Suit.HEART),
-    (Rank.KING, Suit.CLUB)
+    (Value.TWO, Suit.DIAMOND),
+    (Value.ACE, Suit.CLUB),
+    (Value.TWO, Suit.SPADE),
+    (Value.THREE, Suit.DIAMOND),
+    (Value.TEN, Suit.HEART),
+    (Value.SIX, Suit.HEART),
+    (Value.KING, Suit.CLUB)
 ])
 
 print(list(hand.kickercards))
 # [
-#   (<Rank.ACE: 12>, <Suit.CLUB: 1>),
-#   (<Rank.KING: 11>, <Suit.CLUB: 1>),
-#   (<Rank.TEN: 8>, <Suit.HEART: 3>)
+#   (<Value.ACE: 12>, <Suit.CLUB: 1>),
+#   (<Value.KING: 11>, <Suit.CLUB: 1>),
+#   (<Value.TEN: 8>, <Suit.HEART: 3>)
 # ]
 ```
 Using HandParser, we can [estimate the probability](https://github.com/kuco23/pokerlib/blob/master/examples/winning_probability.py) of a given hand winning the game with given known cards on the table (as implemented in another python cli-app [here](https://github.com/cookpete/poker-odds)). We do this by repeatedly random-sampling hands, then averaging the wins. Mathematically, this process converges to the probability by the law of large numbers.
