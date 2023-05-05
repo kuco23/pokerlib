@@ -81,10 +81,10 @@ class AbstractRound(ABC):
             self.current_index)
     @property
     def small_blind_player_index(self):
-        return self.button - 2 if len(self.players) > 2 else self.button - 1
+        return (self.button - 1) % len(self.players)
     @property
     def big_blind_player_index(self):
-        return self.button - 1 if len(self.players) > 2 else self.button
+        return (self.button - 2) % len(self.players)
 
     @property
     def current_player(self):
