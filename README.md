@@ -139,23 +139,28 @@ table.publicIn(player2.id, RoundPublicInId.CALL)
 
 Wrong inputs are mostly ignored, though they can produce a response, when it seems useful. As noted before, when providing input, the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`) along with additional data that depends on the output id. For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
 
-A new round has to be initiated by one of the players every time the previous one ends (or at the beginning). A simple command line game, where you respond by enum names, can be implemented simply as in `examples/round_simulate.py`.
+A simple command line game, where you respond with enum names, can be implemented simply as in `examples/round_simulate.py`. Command
+```python
+python examples/round_simulate.py 3
+```
+runs a poker game with 3 players using the terminal as IO. Note that responses are in non-formatted raw form.
 
-The library is highly customizable, allowing you to override specific class methods such as `_showdown` that let you define the way that cards get shown (see `pokerlib/implementations/_no_muck_showdown_table.py`). The IO identifiers can also be extended or reduced and set either as `Table` or `Round` class attributes.
 
 ## Tests
-Basic tests for this library are included. You can test HandParser by running
+Basic tests for this library are included. You can test `HandParser` by running
 ```bash
 python tests/handparser_reactive.py
 ```
-initiate a poker round simulation with
+and `Round` with
 ```bash
-python tests/round_test.py <number_of_players>
+python tests/round_test.py
 ```
-which will run a poker game simulation with raw data getting printed to stdout. The HandParser functionality was also tested against another poker library [pokerface](https://github.com/AussieSeaweed/pokerface). You can run those tests with
+Note that HandParser can be fuzz tested against another poker library [pokerface](https://github.com/AussieSeaweed/pokerface) with
+Those tests can be run with
 ```bash
 python tests/handparser_against_pokerface.py
 ```
+which means it is considered safe. On the other hand, `Table` may still have some bugs.
 
 ## License
 GNU General Public License v3.0
