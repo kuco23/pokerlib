@@ -422,6 +422,8 @@ class AbstractRound(ABC):
     def _finish(self):
         self.finished = True
         self.publicOut(self.PublicOutId.ROUNDFINISHED)
+        if self._muck_optioned_player_ids == []:
+            self._close()
 
     def _close(self):
         self.closed = True

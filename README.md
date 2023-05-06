@@ -140,7 +140,7 @@ table.publicIn(player2.id, RoundPublicInId.CALL)
 Wrong inputs are mostly ignored, though they can produce a response, when it seems useful. As noted before, when providing input, the `table` object responds with output ids (e.g. `PLAYERACTIONREQUIRED`) along with additional data that depends on the output id. For all possible outputs, check `RoundPublicInId` and `TablePublicInId` enums.
 
 A simple command line game, where you respond with enum names, can be implemented simply as in `examples/round_simulate.py`. Command
-```python
+```bash
 python examples/round_simulate.py 3
 ```
 runs a poker game with 3 players using the terminal as IO. Note that responses are in non-formatted raw form.
