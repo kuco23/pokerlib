@@ -100,7 +100,7 @@ class AbstractTable(ABC):
                 )
             else:
                 player.is_folded = True
-                self.round._postActionStateUpdate(True)
+                self.round._postActionStateUpdate(False)
         # notify that player was removed from table
         self.publicOut(
             self.PublicOutId.PLAYERREMOVED,

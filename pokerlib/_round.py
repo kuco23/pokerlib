@@ -49,7 +49,7 @@ class AbstractRound(ABC):
 
         self.players = players
         self.button = button
-        self.current_index = button # it will move
+        self.current_index = self.starting_player_index
 
         self.board = list()
         self.turn = None
@@ -186,7 +186,8 @@ class AbstractRound(ABC):
         next(self._turn_generator)
         self._dealSmallBlind()
         self._dealBigBlind()
-        self._postActionStateUpdate()
+        self._postActionStateUpdate(False)
+        self._requireAction()
 
     def _dealSmallBlind(self):
         small_blind_player = self.players[self.small_blind_player_index]
@@ -292,12 +293,7 @@ class AbstractRound(ABC):
                     player_id = player.id,
                 )
 
-    def _shiftCurrentPlayer(self):
-        self.current_index = self.players.nextActiveIndex(
-            self.current_index)
-
-    def _moveToNextPlayer(self):
-        self._shiftCurrentPlayer()
+    def _requireAction(self):
         called = self.current_player.turn_stake[self.turn]
         self.publicOut(
             self.PublicOutId.PLAYERACTIONREQUIRED,
@@ -305,7 +301,11 @@ class AbstractRound(ABC):
             to_call = self.turn_stake - called
         )
 
-    def _postActionStateUpdate(self, is_update_after_forcefold=False):
+    def _shiftCurrentPlayer(self):
+        self.current_index = self.players.nextActiveIndex(
+            self.current_index)
+
+    def _postActionStateUpdate(self, move_to_new_player=True):
         active = self.players.countActivePlayers()
         not_folded = self.players.countUnfoldedPlayers()
         pots_balanced = self._potsBalanced()
@@ -328,14 +328,17 @@ class AbstractRound(ABC):
                 return self._finish()
             else:
                 next(self._turn_generator)
-                self.current_index = self.button
-                return self._moveToNextPlayer()
+                self.current_index = self.starting_player_index
+                return self._requireAction()
 
-        # this function can be called after a non-current-player's
-        # hand is force-folded, in which case we don't want to move
-        # onto the next player
-        elif not is_update_after_forcefold:
-            self._moveToNextPlayer()
+        # this function is usually called after a player's action,
+        # in which case it should move on to next active player,
+        # but if called before flop, it should not move from the
+        # starting player index. Also, if a hand is force-folded
+        # from non-current player we don't want to move the player
+        elif move_to_new_player:
+            self._shiftCurrentPlayer()
+            self._requireAction()
 
     def _fold(self):
         self.current_player.is_folded = True
