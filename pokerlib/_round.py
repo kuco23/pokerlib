@@ -74,6 +74,8 @@ class AbstractRound(ABC):
 
     @property
     def starting_player_index(self):
+        if getattr(self, 'turn', Turn.PREFLOP) == Turn.PREFLOP:
+            return self.players.nextUnfoldedIndex(self.big_blind_player_index)
         return self.players.nextUnfoldedIndex(self.button)
     @property
     def last_aggressor_index(self):
@@ -81,13 +83,15 @@ class AbstractRound(ABC):
             self.current_index)
     @property
     def small_blind_player_index(self):
-        return (self.button - 1) % len(self.players)
+        return (self.button + 1) % len(self.players)
     @property
     def big_blind_player_index(self):
-        return (self.button - 2) % len(self.players)
+        return (self.button + 2) % len(self.players)
 
     @property
     def current_player(self):
+        if not isinstance(self.current_index, int):
+            self.current_index = self.current_index()
         return self.players[self.current_index]
 
     @property
