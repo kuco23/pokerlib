@@ -88,10 +88,10 @@ class MyTable(Table):
 
 # define a new table
 table = MyTable(
-    table_id = 0
-    seats = PlayerSeats([None] * 9)
-    buyin = 100
-    small_blind = 5
+    table_id = 0,
+    seats = PlayerSeats([None] * 9),
+    buyin = 100,
+    small_blind = 5,
     big_blind = 10
 )
 ```
@@ -156,7 +156,6 @@ and `Round` with
 python tests/round_test.py
 ```
 Note that HandParser can be fuzz tested against another poker library [pokerface](https://github.com/AussieSeaweed/pokerface) with
-Those tests can be run with
 ```bash
 python tests/handparser_against_pokerface.py
 ```
