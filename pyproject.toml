@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pokerlib"
-version = "2.2.5"
+version = "2.2.6"
 description = "Python poker library"
 repository = "https://github.com/kuco23/pokerlib/"
 authors = ["kuco23 <nseverkar@gmail.com>"]
