@@ -179,6 +179,13 @@ class ValidatedTable(AbstractTable):
             table_id=self.id)
         else: super()._addPlayerOnSeat(player, index)
 
+    def _removePlayerById(self, player_id):
+        player = self.seats.getPlayerById(player_id)
+        if player is None: self.privateOut(
+            player_id, self.PrivateOutId.PLAYERNOTATTABLE,
+            table_id=self.id)
+        else: super()._removePlayer(player)
+
     def _startRound(self, round_id):
         if self.round: self.publicOut(
             self.PublicOutId.ROUNDINPROGRESS,
@@ -217,8 +224,7 @@ class Table(ValidatedTable):
             if action is self.PublicInId.STARTROUND:
                 self._startRound(kwargs.get('round_id'))
             elif action is self.PublicInId.LEAVETABLE:
-                player = self.seats.getPlayerById(player_id)
-                self._removePlayer(player)
+                self._removePlayerById(player_id)
             elif action is self.PublicInId.BUYIN:
                 if 'index' in kwargs:
                     self._addPlayerOnSeat(kwargs['player'], kwargs['index'])
