@@ -90,3 +90,4 @@ class TablePrivateOutId(IntEnum):
     BUYINTOOLOW = 1
     TABLEFULL = 2
     PLAYERALREADYATTABLE = 3
+    INCORRECTSEATINDEX = 4
