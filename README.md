@@ -16,7 +16,7 @@ This module takes care of hand parsing. A hand usually consists of 2 dealt cards
 
 ```python
 from pokerlib import HandParser
-from pokerib.enums import Rank, Suit
+from pokerlib.enums import Rank, Suit
 
 hand1 = HandParser([
     (Rank.KING, Suit.SPADE),

@@ -1,5 +1,5 @@
 from bisect import insort
-from .enums import Hand, Suit, Rank
+from .enums import Hand, Suit
 
 def reactiveParse(fun):
     def modfun(self, *args, **kwargs):

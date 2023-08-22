@@ -1,5 +1,4 @@
 from abc import ABC
-from copy import copy as shallowcopy
 
 from ._round import AbstractRound, Round
 from .enums import TablePublicInId, TablePrivateOutId, TablePublicOutId
