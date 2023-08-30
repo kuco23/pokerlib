@@ -8,6 +8,11 @@ To install, run
 pip install pokerlib
 ```
 
+If experiencing issues, try installing the latest version as
+```bash
+pip install pokerlib==2.2.6
+```
+
 ## Usage
 Library consists of a module for parsing cards, which can be used separately, and modules that aid in running a poker game.
 
