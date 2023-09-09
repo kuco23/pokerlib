@@ -8,9 +8,9 @@ To install, run
 pip install pokerlib
 ```
 
-If experiencing issues, try installing the latest version as
+If experiencing issues, specify the latest version as
 ```bash
-pip install pokerlib==2.2.6
+pip install pokerlib==2.2.7
 ```
 
 ## Usage
